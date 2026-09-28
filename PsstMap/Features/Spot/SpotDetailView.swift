@@ -14,50 +14,49 @@ struct SpotDetailView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                SpotVisualView(place: place)
-                    .frame(height: 260)
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    SpotVisualView(place: place)
+                        .frame(height: 260)
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .padding(.horizontal, 16)
 
-                header
-                    .padding(.horizontal, 20)
-                    .padding(.top, 18)
+                    header
+                        .padding(.horizontal, 20)
+                        .padding(.top, 18)
 
-                actions
-                    .padding(.horizontal, 16)
-                    .padding(.top, 16)
+                    actions
+                        .padding(.horizontal, 16)
+                        .padding(.top, 16)
 
-                VStack(spacing: 12) {
-                    ForEach(place.spot.facts) { fact in
-                        FactCard(fact: fact)
+                    VStack(spacing: 12) {
+                        ForEach(place.spot.facts) { fact in
+                            FactCard(fact: fact)
+                        }
                     }
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 20)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 20)
 
-                footer
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 24)
+                    footer
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 24)
+                }
             }
-        }
-        .background(Theme.screenBackground)
-        .overlay(alignment: .topTrailing) {
-            Button {
-                if let onClose { onClose() } else { dismiss() }
-            } label: {
-                Image(systemName: "xmark")
-                    .font(.body.weight(.semibold))
-                    .frame(width: 36, height: 36)
-                    .floatingSurface(in: Circle())
+            .background(Theme.screenBackground)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        if let onClose { onClose() } else { dismiss() }
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.body.weight(.semibold))
+                    }
+                    .accessibilityLabel(String(localized: "Close"))
+                }
             }
-            .buttonStyle(.plain)
-            .padding(.top, 16)
-            .padding(.trailing, 24)
-            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-            .accessibilityLabel(String(localized: "Close"))
         }
     }
 

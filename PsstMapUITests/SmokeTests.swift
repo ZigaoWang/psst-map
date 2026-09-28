@@ -11,7 +11,7 @@ final class SmokeTests: XCTestCase {
         let start = app.buttons["Start exploring"]
         XCTAssertTrue(start.waitForExistence(timeout: 10))
         start.tap()
-        XCTAssertTrue(app.buttons["Map"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.tabBars.buttons["Map"].waitForExistence(timeout: 10))
     }
 
     @MainActor
@@ -20,7 +20,7 @@ final class SmokeTests: XCTestCase {
         app.launchArguments = ["-onboarding.completed", "YES"]
         app.launch()
 
-        let feedTab = app.buttons["Feed"]
+        let feedTab = app.tabBars.buttons["Feed"]
         XCTAssertTrue(feedTab.waitForExistence(timeout: 10))
         feedTab.tap()
         let card = app.descendants(matching: .any).matching(identifier: "feed.card").firstMatch
@@ -28,8 +28,9 @@ final class SmokeTests: XCTestCase {
         card.tap()
         XCTAssertTrue(app.buttons["Read more"].firstMatch.waitForExistence(timeout: 10))
         app.buttons["Close"].tap()
+        XCTAssertTrue(app.buttons["Read more"].firstMatch.waitForNonExistence(timeout: 5))
 
-        app.buttons["Saved"].tap()
+        app.tabBars.buttons["Saved"].tap()
         XCTAssertTrue(app.navigationBars["Saved"].waitForExistence(timeout: 5))
         app.buttons["About Psst"].tap()
         XCTAssertTrue(app.navigationBars["About"].waitForExistence(timeout: 5))
