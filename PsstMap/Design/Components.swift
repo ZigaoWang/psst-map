@@ -148,3 +148,34 @@ struct Wordmark: View {
             .accessibilityLabel("Psst")
     }
 }
+
+extension View {
+    /// Floating buttons over maps and pictures. On iOS 26 this is the system glass button, which
+    /// handles taps and pressed states itself; custom glass on a button label can swallow taps.
+    @ViewBuilder
+    func floatingButtonStyle(circle: Bool = false) -> some View {
+        if #available(iOS 26.0, *) {
+            self.buttonStyle(.glass)
+                .buttonBorderShape(circle ? .circle : .capsule)
+        } else {
+            self.buttonStyle(FloatingButtonStyle(circle: circle))
+        }
+    }
+}
+
+/// The pre-iOS 26 look for floating buttons: a material pill or circle.
+private struct FloatingButtonStyle: ButtonStyle {
+    let circle: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        let shape = circle ? AnyShape(Circle()) : AnyShape(Capsule())
+        configuration.label
+            .padding(circle ? 10 : 12)
+            .padding(.horizontal, circle ? 0 : 4)
+            .background(.regularMaterial, in: shape)
+            .overlay(shape.stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
+            .shadow(color: .black.opacity(0.12), radius: 8, y: 2)
+            .scaleEffect(configuration.isPressed ? 0.95 : 1)
+            .animation(.snappy(duration: 0.18), value: configuration.isPressed)
+    }
+}

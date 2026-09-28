@@ -104,26 +104,23 @@ struct MapScreen: View {
                 HStack(spacing: 8) {
                     Image(systemName: "square.stack.3d.up.fill")
                         .imageScale(.medium)
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(visibleAreaName ?? String(localized: "Choose an area"))
-                            .font(.subheadline.weight(.semibold))
-                            .lineLimit(1)
-                    }
+                    Text(visibleAreaName ?? String(localized: "Choose an area"))
+                        .font(.subheadline.weight(.semibold))
+                        .lineLimit(1)
                     Image(systemName: "chevron.down")
                         .font(.caption.weight(.bold))
                         .foregroundStyle(.secondary)
                 }
-                .padding(.horizontal, 14)
-                .frame(minHeight: 44)
-                .floatingSurface(in: Capsule())
+                .foregroundStyle(.primary)
+                .frame(minHeight: 28)
             }
-            .buttonStyle(.plain)
+            .floatingButtonStyle()
             .accessibilityLabel(visibleAreaName.map { String(localized: "Area: \($0)") } ?? String(localized: "Choose an area"))
             .accessibilityHint(String(localized: "Shows all areas"))
 
             Spacer(minLength: 0)
 
-            VStack(spacing: 0) {
+            VStack(spacing: 10) {
                 Button(action: locate) {
                     Group {
                         if isLocating {
@@ -132,21 +129,19 @@ struct MapScreen: View {
                             Image(systemName: app.location.isAuthorized ? "location.fill" : "location")
                         }
                     }
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
+                    .frame(width: 24, height: 24)
                 }
+                .floatingButtonStyle(circle: true)
                 .accessibilityLabel(String(localized: "Show my location"))
-                Divider().frame(width: 28)
                 Button { showsKey = true } label: {
                     Image(systemName: "list.bullet.rectangle")
-                        .frame(width: 44, height: 44)
-                        .contentShape(Rectangle())
+                        .frame(width: 24, height: 24)
                 }
+                .floatingButtonStyle(circle: true)
                 .accessibilityLabel(String(localized: "Map key"))
             }
-            .buttonStyle(.plain)
             .font(.body.weight(.medium))
-            .floatingSurface(in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .foregroundStyle(.primary)
         }
         .padding(.horizontal, 16)
         .padding(.top, 8)

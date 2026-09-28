@@ -123,10 +123,10 @@ struct FeedScreen: View {
                     .font(.caption.weight(.bold))
             }
             .foregroundStyle(.white)
-            .padding(.horizontal, 16)
-            .frame(minHeight: 40)
-            .floatingSurface(in: Capsule())
+            .frame(minHeight: 24)
         }
+        .menuStyle(.button)
+        .floatingButtonStyle()
         .padding(.top, 12)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .accessibilityLabel(String(localized: "Showing places from \(scopeTitle)"))

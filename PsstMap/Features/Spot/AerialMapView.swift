@@ -53,10 +53,10 @@ struct AerialMapScreen: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        AerialMapView(place: place, animated: !reduceMotion)
-            .ignoresSafeArea()
-            .overlay(alignment: .top) {
-                HStack(alignment: .top, spacing: 12) {
+        ZStack(alignment: .top) {
+            AerialMapView(place: place, animated: !reduceMotion)
+                .ignoresSafeArea()
+            HStack(alignment: .top, spacing: 12) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(place.name)
                             .font(.headline)
@@ -74,11 +74,11 @@ struct AerialMapScreen: View {
                     } label: {
                         Image(systemName: "xmark")
                             .font(.body.weight(.semibold))
-                            .frame(width: 44, height: 44)
-                            .floatingSurface(in: Circle())
+                            .frame(width: 24, height: 24)
                     }
-                    .buttonStyle(.plain)
+                    .floatingButtonStyle(circle: true)
                     .accessibilityLabel(String(localized: "Close"))
+                    .accessibilityIdentifier("aerial.close")
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
