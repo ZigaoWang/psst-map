@@ -11,6 +11,7 @@ struct FeedScreen: View {
     @State private var isLocating = false
     @State private var locationMessage: String?
     @State private var seed = UInt64.random(in: 0...UInt64.max)
+    @State private var pageSize: CGSize?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static let endID = "feed.end"
@@ -21,6 +22,8 @@ struct FeedScreen: View {
                               height: proxy.size.height + proxy.safeAreaInsets.top + proxy.safeAreaInsets.bottom)
             ZStack(alignment: .top) {
                 Color.black.ignoresSafeArea()
+                    .onAppear { pageSize = size }
+                    .onChange(of: size) { pageSize = size }
                 if items.isEmpty {
                     emptyState
                 } else {
@@ -200,10 +203,11 @@ struct FeedScreen: View {
     private func prefetch(after id: String?) {
         guard let id, let index = items.firstIndex(where: { $0.id == id }) else { return }
         let upcoming = items.dropFirst(index + 1).prefix(2)
-        let screen = UIScreen.main.bounds.size
+        guard let size = pageSize else { return }
+        let pictureSize = FeedCard.pictureSize(for: size)
         for place in upcoming {
             Task(priority: .utility) {
-                _ = await SpotVisuals.shared.picture(for: place, size: screen, scale: 2, dark: true)
+                await SpotVisuals.shared.picture(for: place, size: pictureSize, scale: 2, dark: true)
             }
         }
     }

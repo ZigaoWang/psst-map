@@ -13,18 +13,24 @@ struct FeedCard: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            FeedPicture(place: place, size: size, isActive: isActive)
-                .frame(width: size.width, height: size.height)
-                .clipped()
-                .accessibilityHidden(true)
-
-            LinearGradient(stops: [
-                .init(color: .black.opacity(0.55), location: 0),
-                .init(color: .clear, location: 0.18),
-                .init(color: .clear, location: 0.38),
-                .init(color: .black.opacity(0.72), location: 0.62),
-                .init(color: .black.opacity(0.92), location: 1),
-            ], startPoint: .top, endPoint: .bottom)
+            Color.black
+            VStack(spacing: 0) {
+                FeedPicture(place: place, size: pictureSize, isActive: isActive)
+                    .frame(width: pictureSize.width, height: pictureSize.height)
+                    .clipped()
+                    .overlay(alignment: .bottom) {
+                        // Fade the picture into the black text area.
+                        LinearGradient(colors: [.clear, .black.opacity(0.6), .black],
+                                       startPoint: .top, endPoint: .bottom)
+                            .frame(height: pictureSize.height * 0.4)
+                    }
+                    .overlay(alignment: .top) {
+                        LinearGradient(colors: [.black.opacity(0.5), .clear], startPoint: .top, endPoint: .bottom)
+                            .frame(height: 140)
+                    }
+                    .accessibilityHidden(true)
+                Spacer(minLength: 0)
+            }
             .allowsHitTesting(false)
 
             content
@@ -42,6 +48,13 @@ struct FeedCard: View {
             app.saved.toggle(place.id)
         }
         .accessibilityAction(named: String(localized: "Show on map")) { app.showOnMap(place) }
+    }
+
+    /// The picture takes the top of the card; the text sits below it on black.
+    private var pictureSize: CGSize { Self.pictureSize(for: size) }
+
+    static func pictureSize(for cardSize: CGSize) -> CGSize {
+        CGSize(width: cardSize.width, height: (cardSize.height * 0.64).rounded())
     }
 
     private var bottomPadding: CGFloat {
