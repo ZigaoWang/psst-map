@@ -23,6 +23,7 @@ final class SpotVisuals {
     private var sceneTasks: [String: Task<MKLookAroundScene?, Never>] = [:]
     private let memory = NSCache<NSString, CachedPicture>()
     private var inFlight: [String: Task<Picture?, Never>] = [:]
+    private let limiter = NewestFirstLimiter(limit: 2)
     private let availability: LookAroundAvailability
     private let diskFolder: URL?
 
@@ -100,21 +101,19 @@ final class SpotVisuals {
 
     private func generate(for place: Place, size: CGSize, scale: CGFloat, dark: Bool, key: String,
                           update: ((Picture) -> Void)?) async -> Picture? {
+        await limiter.acquire()
+        defer { limiter.release() }
         // Look Around faces whatever is nearest the coordinate. For a statue or a doorway that is the thing
-        // itself; for a building it is usually a blank wall, so bigger places get the 3D map instead.
-        let wantsStreet = (place.spot.size ?? .medium) == .small
-        async let street = wantsStreet ? lookAroundPicture(for: place, size: size, scale: scale, dark: dark) : nil
+        // itself, and it is quick; for a building it is usually a blank wall, so bigger places get the 3D map.
         var best: Picture?
-        if memory.object(forKey: key as NSString) == nil,
-           let map = await mapPicture(for: place, size: size, scale: scale, dark: dark) {
-            best = map
-            update?(map)
+        if (place.spot.size ?? .medium) == .small {
+            best = await lookAroundPicture(for: place, size: size, scale: scale, dark: dark)
         }
-        if let lookAround = await street {
-            best = lookAround
-            update?(lookAround)
+        if best == nil, memory.object(forKey: key as NSString) == nil {
+            best = await mapPicture(for: place, size: size, scale: scale, dark: dark)
         }
         if let best {
+            update?(best)
             remember(best, key: key)
             writeDisk(best, key: key)
         }
@@ -275,5 +274,35 @@ enum MapFraming {
     static func camera(for place: Place) -> MKMapCamera {
         MKMapCamera(lookingAtCenter: place.mapCoordinate, fromDistance: distance(for: place), pitch: 60,
                     heading: heading(for: place))
+    }
+}
+
+/// Lets a few jobs run at once and starts the newest waiting job first, which is usually the one
+/// the person is looking at right now rather than something prefetched earlier.
+@MainActor
+private final class NewestFirstLimiter {
+    private let limit: Int
+    private var running = 0
+    private var waiting: [CheckedContinuation<Void, Never>] = []
+
+    init(limit: Int) {
+        self.limit = limit
+    }
+
+    func acquire() async {
+        if running < limit {
+            running += 1
+            return
+        }
+        await withCheckedContinuation { waiting.append($0) }
+    }
+
+    func release() {
+        if waiting.isEmpty {
+            running -= 1
+        } else {
+            // The freed slot passes straight to the newest waiter.
+            waiting.removeLast().resume()
+        }
     }
 }
