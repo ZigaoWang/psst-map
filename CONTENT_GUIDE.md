@@ -9,9 +9,9 @@ This is the handbook for adding places to Psst. It is written for a Claude Code 
 3. Get every coordinate from Wikidata or OpenStreetMap. Never guess or estimate one.
 4. Write each fact twice: a short whisper and a longer story. Cite real sources.
 5. Mark every fact as `fact`, `legend`, or `disputed`, honestly.
-6. Save the area as `Content/areas/<area-id>.json`.
+6. Save the area as `Content/areas/<area-id>.json`. That folder is ignored by git: content is kept and licensed separately from the app, so never commit area files to the app repository.
 7. Run `python3 scripts/validate_content.py --online` and fix everything it reports.
-8. Commit with a message like `feat: add Greenwich content`.
+8. Hand the file over to wherever the content is kept, and copy it into `Content/areas/` to build it into the app.
 
 ## What Psst is for
 

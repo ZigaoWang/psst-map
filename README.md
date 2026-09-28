@@ -7,17 +7,20 @@ Native iOS (SwiftUI and MapKit), iOS 17 and later, iPhone and iPad. On the home 
 ## Running it
 
 ```
-brew install xcodegen          # only needed if you change project.yml
-xcodegen generate
+brew install xcodegen
+xcodegen generate              # the Xcode project is generated, not committed
 open PsstMap.xcodeproj
 ```
+
+Put the area files in `Content/areas/` before building (see "Content" below). Without them the app builds and runs, but shows its "couldn't load places" screen, and the content tests skip.
 
 Run the `PsstMap` scheme. Tests: `xcodebuild test -project PsstMap.xcodeproj -scheme PsstMap -destination 'platform=iOS Simulator,name=iPhone 17 Pro'`.
 
 ## How it's put together
 
-- `Content/areas/*.json`: all the places and facts, one file per area, bundled with the app. There is no server. The format, the research rules, and the checklist are in [CONTENT_GUIDE.md](CONTENT_GUIDE.md).
-- `scripts/validate_content.py`: checks the content files. Run it before every commit that touches content; `--online` also re-checks every coordinate against Wikidata or OpenStreetMap.
+- `Content/areas/`: where the area files go at build time. They are bundled into the app; there is no server. The files themselves are not in this repository (see "Content" below).
+- `CONTENT_GUIDE.md`: the file format, the research rules, and the checklist for writing area files.
+- `scripts/validate_content.py`: checks area files. Run it on every new or changed file; `--online` also re-checks every coordinate against Wikidata or OpenStreetMap.
 - `PsstMap/Model`: the decoded content (`Area`, `Spot`, `Fact`) and the `Catalog` the app browses.
 - `PsstMap/Services`: content loading, saved places, feed history, location, pictures (`SpotVisuals`), and China map handling (`ChinaCoordinates`, `MapDatum`).
 - `PsstMap/Features`: the map, the feed, the place detail, saved places, about, and the welcome screen.
@@ -40,3 +43,7 @@ Notifications about nearby places aren't built yet. When they are, `Catalog.plac
 ## Icon
 
 `python3 scripts/make_icon.py` redraws the app icon (light, dark, and tinted variants). It needs Pillow.
+
+## Content
+
+The places and facts are a separate work from the app, with their own scope and license, so this repository holds only the app, its tooling, and the content format. Area files are kept and versioned elsewhere and copied into `Content/areas/` (which git ignores) before a build. The app reads whatever files are there, so shipping new content means dropping in new files and rebuilding; no code changes.
