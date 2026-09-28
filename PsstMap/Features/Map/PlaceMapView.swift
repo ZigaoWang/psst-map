@@ -27,6 +27,11 @@ struct PlaceMapView: UIViewRepresentable {
         map.delegate = context.coordinator
         let configuration = MKStandardMapConfiguration(elevationStyle: .realistic, emphasisStyle: .muted)
         configuration.pointOfInterestFilter = MKPointOfInterestFilter(including: [.publicTransport, .park])
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "debug.allPOI") {
+            configuration.pointOfInterestFilter = .includingAll
+        }
+        #endif
         map.preferredConfiguration = configuration
         map.showsCompass = true
         map.showsScale = true

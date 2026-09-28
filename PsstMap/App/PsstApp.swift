@@ -8,7 +8,12 @@ struct PsstApp: App {
         WindowGroup {
             RootView()
                 .environment(app)
-                .task { await app.load() }
+                .task {
+                    await app.load()
+                    #if DEBUG
+                    DebugLaunch.apply(to: app)
+                    #endif
+                }
         }
     }
 }
