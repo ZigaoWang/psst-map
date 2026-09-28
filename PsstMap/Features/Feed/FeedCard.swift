@@ -214,19 +214,21 @@ struct FeedPicture: View {
                     .scaledToFill()
                     .frame(width: size.width, height: size.height)
                     .scaleEffect(zoomed ? 1.09 : 1.0, anchor: .center)
+                    .id(picture.image)
                     .transition(.opacity)
             } else {
                 VisualPlaceholder(kind: place.spot.kind, isLoading: !didFail,
                                   message: didFail ? String(localized: "No picture right now") : nil)
             }
         }
-        .animation(.easeOut(duration: 0.35), value: picture != nil)
         .task(id: place.id) {
             picture = nil
             didFail = false
-            let result = await SpotVisuals.shared.picture(for: place, size: size, scale: min(displayScale, 2), dark: true)
+            let result = await SpotVisuals.shared.picture(for: place, size: size, scale: min(displayScale, 2),
+                                                          dark: true) { update in
+                withAnimation(.easeOut(duration: 0.4)) { picture = update }
+            }
             if Task.isCancelled { return }
-            picture = result
             didFail = result == nil
         }
         .onChange(of: isActive, initial: true) { _, active in

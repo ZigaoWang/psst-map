@@ -21,14 +21,13 @@ final class SpotVisuals {
     private let logger = Logger(subsystem: "app.psstmap", category: "visuals")
     private var scenes: [String: MKLookAroundScene] = [:]
     private var sceneTasks: [String: Task<MKLookAroundScene?, Never>] = [:]
-    private var pictureTasks: [String: Task<Picture?, Never>] = [:]
-    private let memory = NSCache<NSString, UIImage>()
+    private let memory = NSCache<NSString, CachedPicture>()
     private let availability: LookAroundAvailability
     private let diskFolder: URL?
 
     private init() {
         availability = LookAroundAvailability()
-        memory.countLimit = 60
+        memory.countLimit = 24
         let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
         diskFolder = caches?.appendingPathComponent("visuals-v1", isDirectory: true)
         if let diskFolder {
@@ -67,45 +66,49 @@ final class SpotVisuals {
 
     // MARK: Pictures
 
-    /// A still picture for feed cards and lists.
-    func picture(for place: Place, size: CGSize, scale: CGFloat, dark: Bool) async -> Picture? {
+    /// A still picture for feed cards, delivered progressively: `update` is called with a map picture as
+    /// soon as one is ready, then again with a Look Around picture if Apple has one. Returns the best found.
+    @discardableResult
+    func picture(for place: Place, size: CGSize, scale: CGFloat, dark: Bool,
+                 update: ((Picture) -> Void)? = nil) async -> Picture? {
         let size = CGSize(width: size.width.rounded(), height: size.height.rounded())
         guard size.width > 10, size.height > 10 else { return nil }
         let key = cacheKey(place: place, size: size, scale: scale, dark: dark)
-        if let image = memory.object(forKey: key as NSString) {
-            return Picture(image: image, source: sourceFromKeyCache(key))
-        }
-        if let task = pictureTasks[key] { return await task.value }
-
-        let task = Task<Picture?, Never> { [weak self] in
-            guard let self else { return nil }
-            if let cached = await self.readDisk(key: key) {
-                return cached
-            }
-            var picture: Picture?
-            if let scene = await self.lookAroundScene(for: place) {
-                picture = await self.lookAroundSnapshot(scene: scene, size: size, scale: scale, dark: dark)
-            }
-            if picture == nil {
-                picture = await self.mapSnapshot(for: place, size: size, scale: scale, dark: dark)
-            }
-            if let picture { self.writeDisk(picture, key: key) }
+        if let cached = memory.object(forKey: key as NSString) {
+            let picture = Picture(image: cached.image, source: cached.source)
+            update?(picture)
             return picture
         }
-        pictureTasks[key] = task
-        let picture = await task.value
-        pictureTasks[key] = nil
-        if let picture {
-            memory.setObject(picture.image, forKey: key as NSString)
-            sources[key] = picture.source
+        if let cached = await readDisk(key: key) {
+            remember(cached, key: key)
+            update?(cached)
+            if cached.source == .lookAround || place.isInMainlandChina { return cached }
         }
-        return picture
+
+        async let street = lookAroundPicture(for: place, size: size, scale: scale, dark: dark)
+        var best: Picture?
+        if memory.object(forKey: key as NSString) == nil,
+           let map = await mapPicture(for: place, size: size, scale: scale, dark: dark) {
+            best = map
+            update?(map)
+        }
+        if let lookAround = await street {
+            best = lookAround
+            update?(lookAround)
+        }
+        if let best {
+            remember(best, key: key)
+            writeDisk(best, key: key)
+        }
+        return best ?? memory.object(forKey: key as NSString).map { Picture(image: $0.image, source: $0.source) }
     }
 
-    private var sources: [String: Source] = [:]
-    private func sourceFromKeyCache(_ key: String) -> Source { sources[key] ?? .map }
+    private func remember(_ picture: Picture, key: String) {
+        memory.setObject(CachedPicture(image: picture.image, source: picture.source), forKey: key as NSString)
+    }
 
-    private func lookAroundSnapshot(scene: MKLookAroundScene, size: CGSize, scale: CGFloat, dark: Bool) async -> Picture? {
+    private func lookAroundPicture(for place: Place, size: CGSize, scale: CGFloat, dark: Bool) async -> Picture? {
+        guard let scene = await lookAroundScene(for: place) else { return nil }
         let options = MKLookAroundSnapshotter.Options()
         options.size = size
         options.pointOfInterestFilter = .excludingAll
@@ -119,7 +122,7 @@ final class SpotVisuals {
         }
     }
 
-    private func mapSnapshot(for place: Place, size: CGSize, scale: CGFloat, dark: Bool) async -> Picture? {
+    private func mapPicture(for place: Place, size: CGSize, scale: CGFloat, dark: Bool) async -> Picture? {
         let options = MKMapSnapshotter.Options()
         options.camera = MapFraming.camera(for: place)
         options.preferredConfiguration = MKHybridMapConfiguration(elevationStyle: .realistic)
@@ -191,9 +194,22 @@ final class SpotVisuals {
         guard let diskFolder, let data = picture.image.jpegData(compressionQuality: 0.82) else { return }
         let suffix = picture.source == .lookAround ? "la" : "map"
         let url = diskFolder.appendingPathComponent("\(key)-\(suffix).jpg")
+        let mapURL = diskFolder.appendingPathComponent("\(key)-map.jpg")
+        let isLookAround = picture.source == .lookAround
         Task.detached(priority: .background) {
             try? data.write(to: url, options: .atomic)
+            if isLookAround { try? FileManager.default.removeItem(at: mapURL) }
         }
+    }
+}
+
+private final class CachedPicture {
+    let image: UIImage
+    let source: SpotVisuals.Source
+
+    init(image: UIImage, source: SpotVisuals.Source) {
+        self.image = image
+        self.source = source
     }
 }
 
