@@ -31,7 +31,7 @@ final class SpotVisuals {
         availability = LookAroundAvailability()
         memory.countLimit = 24
         let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
-        diskFolder = caches?.appendingPathComponent("visuals-v2", isDirectory: true)
+        diskFolder = caches?.appendingPathComponent("visuals-v4", isDirectory: true)
         if let diskFolder {
             try? FileManager.default.createDirectory(at: diskFolder, withIntermediateDirectories: true)
         }
@@ -144,7 +144,7 @@ final class SpotVisuals {
         options.camera = MapFraming.camera(for: place)
         options.preferredConfiguration = MapFraming.shows3D(place)
             ? MKHybridMapConfiguration(elevationStyle: .realistic)
-            : MKStandardMapConfiguration(elevationStyle: .flat, emphasisStyle: .muted)
+            : MKHybridMapConfiguration(elevationStyle: .flat)
         options.pointOfInterestFilter = .excludingAll
         options.size = size
         options.traitCollection = Self.traits(scale: scale, dark: dark)
@@ -297,7 +297,8 @@ private final class LookAroundAvailability {
 /// Camera choices shared by the snapshotter and the live 3D view.
 enum MapFraming {
     /// Countries where Apple Maps has realistic 3D buildings for city centers. Elsewhere (Shanghai and
-    /// Kuala Lumpur today) a tilted view is just stretched satellite imagery, so a flat map reads better.
+    /// Kuala Lumpur today) a tilted view is just stretched satellite imagery, so those places are shown
+    /// from straight above instead.
     private static let countriesWith3D: Set<String> = ["GB", "US", "CA", "FR", "DE", "ES", "IT", "NL", "IE", "JP", "AU"]
 
     static func shows3D(_ place: Place) -> Bool {
@@ -309,10 +310,11 @@ enum MapFraming {
             // Close enough that MapKit allows a steep tilt, far enough to show the whole thing.
             return (place.spot.size ?? .medium) == .large ? 820 : 430
         }
+        // Straight down, close enough to see rooftops and trees, far enough for a street name or two.
         switch place.spot.size ?? .medium {
-        case .small: return 420
-        case .medium: return 600
-        case .large: return 1_100
+        case .small: return 700
+        case .medium: return 950
+        case .large: return 1_700
         }
     }
 

@@ -26,7 +26,7 @@ struct AerialMapView: View {
         }
         .mapStyle(MapFraming.shows3D(place)
                   ? .hybrid(elevation: .realistic, pointsOfInterest: .excludingAll)
-                  : .standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll))
+                  : .hybrid(elevation: .flat, pointsOfInterest: .excludingAll))
         .mapControls { }
         .onAppear { position = .camera(camera(heading: MapFraming.heading(for: place))) }
         .task(id: place.id) {
