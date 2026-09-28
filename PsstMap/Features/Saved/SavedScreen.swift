@@ -37,6 +37,9 @@ struct SavedScreen: View {
             .sheet(isPresented: $showsAbout) {
                 AboutView()
             }
+            #if DEBUG
+            .onAppear { if UserDefaults.standard.string(forKey: "debug.sheet") == "about" { showsAbout = true } }
+            #endif
         }
     }
 
