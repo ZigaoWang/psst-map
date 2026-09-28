@@ -22,7 +22,7 @@ struct FeedCard: View {
                         // Fade the picture into the black text area.
                         LinearGradient(colors: [.clear, .black.opacity(0.6), .black],
                                        startPoint: .top, endPoint: .bottom)
-                            .frame(height: pictureSize.height * 0.4)
+                            .frame(height: pictureSize.height * (typeSize.isAccessibilitySize ? 0.8 : 0.4))
                     }
                     .overlay(alignment: .top) {
                         LinearGradient(colors: [.black.opacity(0.5), .clear], startPoint: .top, endPoint: .bottom)
@@ -38,6 +38,7 @@ struct FeedCard: View {
                 .padding(.bottom, bottomPadding)
         }
         .frame(width: size.width, height: size.height)
+        .dynamicTypeSize(...DynamicTypeSize.accessibility2)
         .contentShape(Rectangle())
         .onTapGesture(perform: onOpen)
         .accessibilityElement(children: .ignore)
@@ -82,7 +83,7 @@ struct FeedCard: View {
     private var text: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
-                KindBadge(kind: place.spot.kind)
+                KindBadge(kind: place.spot.kind, compact: typeSize.isAccessibilitySize)
                 Text(place.areaName)
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(.white.opacity(0.8))
@@ -92,7 +93,7 @@ struct FeedCard: View {
                 Text(place.name)
                     .font(.title.weight(.bold))
                     .foregroundStyle(.white)
-                    .lineLimit(3)
+                    .lineLimit(typeSize.isAccessibilitySize ? 2 : 3)
                     .minimumScaleFactor(0.8)
                 if let local = place.spot.localName {
                     Text(local)
@@ -106,7 +107,7 @@ struct FeedCard: View {
             Text(fact.short)
                 .font(.title3)
                 .foregroundStyle(.white)
-                .lineLimit(typeSize.isAccessibilitySize ? 5 : nil)
+                .lineLimit(typeSize.isAccessibilitySize ? 4 : nil)
                 .fixedSize(horizontal: false, vertical: !typeSize.isAccessibilitySize)
             Button(action: onOpen) {
                 HStack(spacing: 6) {
@@ -179,15 +180,20 @@ private struct RailButton: View {
 private struct RailLabel: View {
     let symbol: String
     let title: String
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         VStack(spacing: 4) {
             Image(systemName: symbol)
                 .font(.title2.weight(.semibold))
-                .frame(width: 44, height: 36)
-            Text(title)
-                .font(.caption2.weight(.semibold))
+                .frame(minWidth: 44, minHeight: 36)
+            if !typeSize.isAccessibilitySize {
+                Text(title)
+                    .font(.caption2.weight(.semibold))
+            }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
         .foregroundStyle(.white)
         .shadow(color: .black.opacity(0.4), radius: 4, y: 1)
         .contentShape(Rectangle())
@@ -250,6 +256,7 @@ extension FeedPicture {
     fileprivate func sourceLabel(_ source: SpotVisuals.Source) -> some View {
         Text(source == .lookAround ? "Look Around" : "3D map")
             .font(.caption2.weight(.semibold))
+            .dynamicTypeSize(...DynamicTypeSize.xLarge)
             .foregroundStyle(.white.opacity(0.85))
             .padding(.horizontal, 7)
             .padding(.vertical, 3)

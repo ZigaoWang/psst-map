@@ -47,10 +47,11 @@ struct SpotVisualView: View {
     private var modePicker: some View {
         HStack(spacing: 2) {
             modeButton(.street, title: String(localized: "Street"), symbol: "binoculars.fill")
-            modeButton(.aerial, title: String(localized: "3D"), symbol: "view.3d")
+            modeButton(.aerial, title: String(localized: "3D"), symbol: "cube")
         }
         .padding(3)
         .floatingSurface(in: Capsule())
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 
     private func modeButton(_ value: Mode, title: String, symbol: String) -> some View {

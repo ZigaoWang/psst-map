@@ -126,6 +126,7 @@ struct FeedScreen: View {
             .floatingSurface(in: Capsule())
         }
         .padding(.top, 12)
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .accessibilityLabel(String(localized: "Showing places from \(scopeTitle)"))
         .accessibilityHint(String(localized: "Choose where the feed shows places from"))
     }

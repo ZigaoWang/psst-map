@@ -11,6 +11,7 @@ struct SpotDetailView: View {
     @Environment(AppModel.self) private var app
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         ScrollView {
@@ -55,18 +56,21 @@ struct SpotDetailView: View {
             .buttonStyle(.plain)
             .padding(.top, 16)
             .padding(.trailing, 24)
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             .accessibilityLabel(String(localized: "Close"))
         }
     }
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
+            let layout = typeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 6))
+                : AnyLayout(HStackLayout(spacing: 8))
+            layout {
                 KindBadge(kind: place.spot.kind)
                 Text("\(place.areaName), \(place.city)")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                    .lineLimit(2)
             }
             Text(place.name)
                 .font(.largeTitle.weight(.bold))
@@ -83,7 +87,10 @@ struct SpotDetailView: View {
 
     private var actions: some View {
         let isSaved = app.saved.contains(place.id)
-        return HStack(spacing: 10) {
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(spacing: 10))
+            : AnyLayout(HStackLayout(spacing: 10))
+        return layout {
             ActionButton(title: isSaved ? String(localized: "Saved") : String(localized: "Save"),
                          symbol: isSaved ? "bookmark.fill" : "bookmark") {
                 app.saved.toggle(place.id)
@@ -154,9 +161,13 @@ private struct ActionButton: View {
 private struct ActionLabel: View {
     let title: String
     let symbol: String
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        VStack(spacing: 5) {
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(HStackLayout(spacing: 12))
+            : AnyLayout(VStackLayout(spacing: 5))
+        layout {
             Image(systemName: symbol)
                 .font(.title3)
                 .frame(height: 24)

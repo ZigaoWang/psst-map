@@ -11,6 +11,7 @@ struct MapScreen: View {
     @State private var regionRequest: PlaceMapView.RegionRequest?
     @State private var isLocating = false
     @State private var locationProblem: LocationProblem?
+    @State private var detent: PresentationDetent = .medium
 
     enum LocationProblem: Identifiable {
         case denied, unavailable, nothingNearby
@@ -39,7 +40,7 @@ struct MapScreen: View {
         .overlay(alignment: .top) { topBar }
         .sheet(item: selectedPlace) { place in
             SpotDetailView(place: place, showsMapButton: false, onClose: { selectedID = nil })
-                .presentationDetents([.medium, .large])
+                .presentationDetents([.medium, .large], selection: $detent)
                 .presentationBackgroundInteraction(.enabled(upThrough: .medium))
                 .presentationContentInteraction(.scrolls)
                 .presentationDragIndicator(.visible)
@@ -54,6 +55,12 @@ struct MapScreen: View {
         .sheet(isPresented: $showsKey) {
             MapKeySheet()
                 .presentationDetents([.medium, .large])
+        }
+        .onChange(of: selectedID) { old, new in
+            if old == nil, new != nil { detent = .medium }
+            #if DEBUG
+            if new != nil, UserDefaults.standard.string(forKey: "debug.detent") == "large" { detent = .large }
+            #endif
         }
         .alert(item: $locationProblem) { problem in
             switch problem {
@@ -131,6 +138,7 @@ struct MapScreen: View {
         }
         .padding(.horizontal, 16)
         .padding(.top, 8)
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 
     private func updateVisibleArea(_ region: MKCoordinateRegion) {
