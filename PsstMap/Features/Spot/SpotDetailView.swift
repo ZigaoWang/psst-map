@@ -4,52 +4,48 @@ import SwiftUI
 /// Everything about one place: its picture, its facts, and what you can do with it.
 struct SpotDetailView: View {
     let place: Place
-    /// Hidden when the detail is already shown over the map.
+    /// Hidden when the page was opened from the map already.
     var showsMapButton = true
-    var onClose: (() -> Void)?
 
     @Environment(AppModel.self) private var app
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.openURL) private var openURL
     @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var lookAroundScene: MKLookAroundScene?
+    @State private var showsLookAround = false
+    @State private var showsAerial = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    SpotVisualView(place: place)
-                        .frame(height: 260)
-                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                        .padding(.horizontal, 16)
+                    SpotHero(place: place, lookAroundScene: lookAroundScene,
+                             onLookAround: { showsLookAround = true },
+                             onAerial: { showsAerial = true })
+                        .frame(height: typeSize.isAccessibilitySize ? 260 : 340)
 
-                    header
-                        .padding(.horizontal, 20)
-                        .padding(.top, 18)
-
-                    actions
-                        .padding(.horizontal, 16)
-                        .padding(.top, 16)
-
-                    VStack(spacing: 12) {
-                        ForEach(place.spot.facts) { fact in
-                            FactCard(fact: fact)
+                    VStack(alignment: .leading, spacing: 22) {
+                        header
+                        actions
+                        VStack(spacing: 14) {
+                            ForEach(place.spot.facts) { fact in
+                                FactCard(fact: fact)
+                            }
                         }
+                        footer
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 20)
-
-                    footer
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 24)
+                    .padding(.bottom, 32)
                 }
             }
+            .ignoresSafeArea(edges: .top)
             .background(Theme.screenBackground)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        if let onClose { onClose() } else { dismiss() }
+                        dismiss()
                     } label: {
                         Image(systemName: "xmark")
                             .font(.body.weight(.semibold))
@@ -57,6 +53,14 @@ struct SpotDetailView: View {
                     .accessibilityLabel(String(localized: "Close"))
                 }
             }
+        }
+        .lookAroundViewer(isPresented: $showsLookAround, initialScene: lookAroundScene, allowsNavigation: true,
+                          showsRoadLabels: true, pointsOfInterest: .excludingAll)
+        .fullScreenCover(isPresented: $showsAerial) {
+            AerialMapScreen(place: place)
+        }
+        .task(id: place.id) {
+            lookAroundScene = await SpotVisuals.shared.lookAroundScene(for: place)
         }
     }
 
@@ -82,34 +86,40 @@ struct SpotDetailView: View {
                     .textSelection(.enabled)
             }
         }
+        .padding(.horizontal, 4)
     }
 
     private var actions: some View {
         let isSaved = app.saved.contains(place.id)
-        let layout = typeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(spacing: 10))
-            : AnyLayout(HStackLayout(spacing: 10))
-        return layout {
-            ActionButton(title: isSaved ? String(localized: "Saved") : String(localized: "Save"),
-                         symbol: isSaved ? "bookmark.fill" : "bookmark") {
-                app.saved.toggle(place.id)
+        return HStack(spacing: 10) {
+            Button {
+                withAnimation(.snappy) { app.saved.toggle(place.id) }
+            } label: {
+                Label(isSaved ? String(localized: "Saved") : String(localized: "Save"),
+                      systemImage: isSaved ? "bookmark.fill" : "bookmark")
+                    .font(.body.weight(.semibold))
+                    .frame(maxWidth: .infinity, minHeight: 50)
+                    .foregroundStyle(isSaved ? Color.primary : Color(uiColor: .systemBackground))
+                    .background(isSaved ? AnyShapeStyle(Theme.cardBackground) : AnyShapeStyle(Color.primary),
+                                in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
+            .buttonStyle(PressableButtonStyle())
             .sensoryFeedback(.selection, trigger: isSaved)
             .accessibilityAddTraits(isSaved ? .isSelected : [])
 
             if showsMapButton {
-                ActionButton(title: String(localized: "Map"), symbol: "map") {
+                IconAction(symbol: "map", label: String(localized: "Show on map")) {
                     dismiss()
                     app.showOnMap(place)
                 }
             }
-
             ShareLink(item: ShareText.text(for: place)) {
-                ActionLabel(title: String(localized: "Share"), symbol: "square.and.arrow.up")
+                IconActionLabel(symbol: "square.and.arrow.up")
             }
-            .buttonStyle(.plain)
-
-            ActionButton(title: String(localized: "Directions"), symbol: "arrow.triangle.turn.up.right.diamond") {
+            .buttonStyle(PressableButtonStyle())
+            .accessibilityLabel(String(localized: "Share"))
+            IconAction(symbol: "figure.walk", label: String(localized: "Walking directions")) {
                 openInMaps()
             }
         }
@@ -125,10 +135,11 @@ struct SpotDetailView: View {
                         .underline()
                 }
             }
-            Text("Spotted something wrong? Every fact links to its sources above.")
+            Text("Spotted something wrong? Every fact links to its sources.")
         }
         .font(.footnote)
         .foregroundStyle(.secondary)
+        .padding(.horizontal, 4)
     }
 
     private func openInMaps() {
@@ -144,40 +155,30 @@ struct SpotDetailView: View {
     }
 }
 
-private struct ActionButton: View {
-    let title: String
+private struct IconAction: View {
     let symbol: String
+    let label: String
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            ActionLabel(title: title, symbol: symbol)
+            IconActionLabel(symbol: symbol)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableButtonStyle())
+        .accessibilityLabel(label)
     }
 }
 
-private struct ActionLabel: View {
-    let title: String
+private struct IconActionLabel: View {
     let symbol: String
-    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        let layout = typeSize.isAccessibilitySize
-            ? AnyLayout(HStackLayout(spacing: 12))
-            : AnyLayout(VStackLayout(spacing: 5))
-        layout {
-            Image(systemName: symbol)
-                .font(.title3)
-                .frame(height: 24)
-            Text(title)
-                .font(.caption.weight(.medium))
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-        }
-        .frame(maxWidth: .infinity, minHeight: 60)
-        .background(Theme.cardBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        Image(systemName: symbol)
+            .font(.body.weight(.semibold))
+            .foregroundStyle(.primary)
+            .frame(width: 54, height: 50)
+            .background(Theme.cardBackground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 
