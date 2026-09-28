@@ -25,7 +25,7 @@ struct SpotVisualView: View {
         .task(id: place.id) {
             isResolving = true
             scene = nil
-            mode = .street
+            mode = place.spot.size == .large ? .aerial : .street
             scene = await SpotVisuals.shared.lookAroundScene(for: place)
             isResolving = false
         }

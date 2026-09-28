@@ -82,10 +82,13 @@ final class SpotVisuals {
         if let cached = await readDisk(key: key) {
             remember(cached, key: key)
             update?(cached)
-            if cached.source == .lookAround || place.isInMainlandChina { return cached }
+            if cached.source == .lookAround || place.isInMainlandChina || place.spot.size != .small { return cached }
         }
 
-        async let street = lookAroundPicture(for: place, size: size, scale: scale, dark: dark)
+        // Look Around faces whatever is nearest the coordinate. For a statue or a doorway that is the thing
+        // itself; for a building it is usually a blank wall, so bigger places get the 3D map instead.
+        let wantsStreet = (place.spot.size ?? .medium) == .small
+        async let street = wantsStreet ? lookAroundPicture(for: place, size: size, scale: scale, dark: dark) : nil
         var best: Picture?
         if memory.object(forKey: key as NSString) == nil,
            let map = await mapPicture(for: place, size: size, scale: scale, dark: dark) {
