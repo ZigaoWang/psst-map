@@ -1,6 +1,7 @@
+import MapKit
 import SwiftUI
 
-/// One full-screen page of the feed.
+/// One full-screen page of the feed: the picture, the place, and its best secret. Nothing else.
 struct FeedCard: View {
     let place: Place
     let size: CGSize
@@ -11,33 +12,33 @@ struct FeedCard: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.safeAreaInsets) private var safeArea
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @State private var lookAroundScene: MKLookAroundScene?
+    @State private var showsLookAround = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            Color.black
-            VStack(spacing: 0) {
-                FeedPicture(place: place, size: pictureSize, isActive: isActive)
-                    .frame(width: pictureSize.width, height: pictureSize.height)
-                    .clipped()
-                    .overlay(alignment: .bottom) {
-                        // Fade the picture into the black text area.
-                        LinearGradient(colors: [.clear, .black.opacity(0.6), .black],
-                                       startPoint: .top, endPoint: .bottom)
-                            .frame(height: pictureSize.height * (typeSize.isAccessibilitySize ? 0.8 : 0.4))
-                    }
-                    .overlay(alignment: .top) {
-                        LinearGradient(colors: [.black.opacity(0.5), .clear], startPoint: .top, endPoint: .bottom)
-                            .frame(height: 140)
-                    }
-                    .accessibilityHidden(true)
-                Spacer(minLength: 0)
-            }
+            FeedPicture(place: place, size: pictureSize, isActive: isActive)
+                .frame(width: size.width, height: size.height)
+                .clipped()
+                .accessibilityHidden(true)
+
+            LinearGradient(stops: [
+                .init(color: .black.opacity(0.45), location: 0),
+                .init(color: .clear, location: 0.2),
+                .init(color: .clear, location: 0.4),
+                .init(color: .black.opacity(0.7), location: 0.62),
+                .init(color: .black.opacity(0.88), location: 0.8),
+                .init(color: .black.opacity(0.92), location: 1),
+            ], startPoint: .top, endPoint: .bottom)
             .allowsHitTesting(false)
 
-            content
-                .frame(maxWidth: 760)
-                .padding(.horizontal, 20)
-                .padding(.bottom, bottomPadding)
+            HStack(alignment: .bottom, spacing: 20) {
+                text
+                actions
+            }
+            .frame(maxWidth: 640)
+            .padding(.horizontal, 20)
+            .padding(.bottom, bottomPadding)
         }
         .frame(width: size.width, height: size.height)
         .dynamicTypeSize(...DynamicTypeSize.accessibility2)
@@ -52,116 +53,98 @@ struct FeedCard: View {
             app.saved.toggle(place.id)
         }
         .accessibilityAction(named: String(localized: "Show on map")) { app.showOnMap(place) }
+        .lookAroundViewer(isPresented: $showsLookAround, initialScene: lookAroundScene, allowsNavigation: true,
+                          showsRoadLabels: true, pointsOfInterest: .excludingAll)
+        .task(id: isActive) {
+            // Only the card on screen asks Apple for Look Around, so scrolling stays light.
+            guard isActive, lookAroundScene == nil else { return }
+            let scene = await SpotVisuals.shared.lookAroundScene(for: place)
+            withAnimation(.snappy) { lookAroundScene = scene }
+        }
     }
 
-    /// The picture takes the top of the card; the text sits below it on black.
+    /// Pictures are made at the card's full size and shared with the map card and place page.
     private var pictureSize: CGSize { Self.pictureSize(for: size) }
 
     static func pictureSize(for cardSize: CGSize) -> CGSize {
-        CGSize(width: cardSize.width, height: (cardSize.height * 0.64).rounded())
+        CGSize(width: cardSize.width.rounded(), height: cardSize.height.rounded())
     }
 
     private var bottomPadding: CGFloat {
         // Clear the floating tab bar, which sits at the top on iPad.
-        safeArea.bottom + (horizontalSizeClass == .regular ? 40 : 64)
+        safeArea.bottom + (horizontalSizeClass == .regular ? 32 : 60)
     }
 
     private var fact: Fact { place.leadFact }
 
-    @ViewBuilder
-    private var content: some View {
-        if typeSize.isAccessibilitySize {
-            VStack(alignment: .leading, spacing: 16) {
-                text
-                rail(axis: .horizontal)
-            }
-        } else {
-            HStack(alignment: .bottom, spacing: 16) {
-                text
-                rail(axis: .vertical)
-            }
-        }
-    }
-
     private var text: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
-                KindBadge(kind: place.spot.kind, compact: typeSize.isAccessibilitySize)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(place.spot.kind.color)
+                    .frame(width: 8, height: 8)
                 Text(place.areaName)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.white.opacity(0.8))
-                    .lineLimit(1)
-            }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(place.name)
-                    .font(.title.weight(.bold))
-                    .foregroundStyle(.white)
-                    .lineLimit(typeSize.isAccessibilitySize ? 2 : 3)
-                    .minimumScaleFactor(0.8)
-                if let local = place.spot.localName {
-                    Text(local)
-                        .font(.headline)
-                        .foregroundStyle(.white.opacity(0.75))
+                if fact.status != .fact {
+                    Text("· \(fact.status.label)")
+                        .foregroundStyle(fact.status == .legend ? Color(white: 0.85) : .white.opacity(0.7))
                 }
             }
-            if fact.status != .fact {
-                StatusBadge(status: fact.status)
-            }
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(.white.opacity(0.75))
+            .lineLimit(1)
+
+            Text(place.name)
+                .font(.title2.weight(.bold))
+                .foregroundStyle(.white)
+                .lineLimit(2)
+
             Text(fact.short)
-                .font(.title3)
-                .foregroundStyle(.white)
-                .lineLimit(typeSize.isAccessibilitySize ? 4 : nil)
-                .fixedSize(horizontal: false, vertical: !typeSize.isAccessibilitySize)
-            Button(action: onOpen) {
-                HStack(spacing: 6) {
-                    Text(moreLabel)
-                    Image(systemName: "chevron.right")
-                        .imageScale(.small)
-                        .accessibilityHidden(true)
-                }
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.white)
-                .padding(.vertical, 10)
-                .contentShape(Rectangle())
+                .font(.body)
+                .foregroundStyle(.white.opacity(0.9))
+                .lineSpacing(3)
+                .lineLimit(typeSize.isAccessibilitySize ? 4 : 6)
+
+            HStack(spacing: 4) {
+                Text("Read more")
+                Image(systemName: "chevron.right")
+                    .imageScale(.small)
+                    .accessibilityHidden(true)
             }
-            .buttonStyle(.plain)
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(.white.opacity(0.75))
+            .padding(.top, 2)
         }
-        .frame(maxWidth: 620, alignment: .leading)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .shadow(color: .black.opacity(0.35), radius: 6, y: 1)
+        .shadow(color: .black.opacity(0.4), radius: 6, y: 1)
     }
 
-    private var moreLabel: String {
-        let others = place.spot.facts.count - 1
-        if others <= 0 { return String(localized: "Read the story") }
-        return others == 1
-            ? String(localized: "Read the story and 1 more")
-            : String(localized: "Read the story and \(others) more")
-    }
-
-    @ViewBuilder
-    private func rail(axis: Axis) -> some View {
-        let layout = axis == .vertical ? AnyLayout(VStackLayout(spacing: 18)) : AnyLayout(HStackLayout(spacing: 22))
+    private var actions: some View {
         let isSaved = app.saved.contains(place.id)
-        layout {
-            RailButton(symbol: isSaved ? "bookmark.fill" : "bookmark",
-                       title: isSaved ? String(localized: "Saved") : String(localized: "Save")) {
+        return VStack(spacing: 22) {
+            if lookAroundScene != nil {
+                IconButton(symbol: "binoculars", label: String(localized: "Look Around")) {
+                    showsLookAround = true
+                }
+                .transition(.scale.combined(with: .opacity))
+            }
+            IconButton(symbol: isSaved ? "bookmark.fill" : "bookmark",
+                       label: isSaved ? String(localized: "Remove from saved") : String(localized: "Save")) {
                 app.saved.toggle(place.id)
             }
             .sensoryFeedback(.impact(weight: .light), trigger: isSaved)
-            RailButton(symbol: "map", title: String(localized: "Map")) {
+            IconButton(symbol: "map", label: String(localized: "Show on map")) {
                 app.showOnMap(place)
             }
             ShareLink(item: ShareText.text(for: place)) {
-                RailLabel(symbol: "square.and.arrow.up", title: String(localized: "Share"))
+                IconLabel(symbol: "square.and.arrow.up")
             }
-            .buttonStyle(.plain)
+            .buttonStyle(PressableButtonStyle())
+            .accessibilityLabel(String(localized: "Share"))
         }
-        .padding(.bottom, axis == .vertical ? 48 : 0)
     }
 
     private var accessibilityText: String {
-        var parts = [place.name, place.spot.kind.label, place.areaName]
+        var parts = [place.name, place.areaName]
         if fact.status == .legend { parts.append(String(localized: "Legend, not a proven fact")) }
         if fact.status == .disputed { parts.append(String(localized: "Disputed")) }
         parts.append(fact.short)
@@ -169,39 +152,31 @@ struct FeedCard: View {
     }
 }
 
-private struct RailButton: View {
+private struct IconButton: View {
     let symbol: String
-    let title: String
+    let label: String
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            RailLabel(symbol: symbol, title: title)
+            IconLabel(symbol: symbol)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableButtonStyle())
+        .accessibilityLabel(label)
     }
 }
 
-private struct RailLabel: View {
+private struct IconLabel: View {
     let symbol: String
-    let title: String
-    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        VStack(spacing: 4) {
-            Image(systemName: symbol)
-                .font(.title2.weight(.semibold))
-                .frame(minWidth: 44, minHeight: 36)
-            if !typeSize.isAccessibilitySize {
-                Text(title)
-                    .font(.caption2.weight(.semibold))
-            }
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(title)
-        .foregroundStyle(.white)
-        .shadow(color: .black.opacity(0.4), radius: 4, y: 1)
-        .contentShape(Rectangle())
+        Image(systemName: symbol)
+            .font(.title2)
+            .foregroundStyle(.white)
+            .frame(width: 44, height: 44)
+            .shadow(color: .black.opacity(0.4), radius: 4, y: 1)
+            .contentShape(Rectangle())
+            .contentTransition(.symbolEffect(.replace))
     }
 }
 
@@ -215,8 +190,6 @@ struct FeedPicture: View {
     @State private var didFail = false
     @State private var zoomed = false
     @Environment(\.displayScale) private var displayScale
-    @Environment(\.safeAreaInsets) fileprivate var safeArea
-    fileprivate var safeTop: CGFloat { safeArea.top }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -229,7 +202,6 @@ struct FeedPicture: View {
                     .scaleEffect(zoomed ? 1.09 : 1.0, anchor: .center)
                     .id(picture.image)
                     .transition(.opacity)
-                sourceLabel(picture.source)
             } else {
                 VisualPlaceholder(kind: place.spot.kind, isLoading: !didFail,
                                   message: didFail ? String(localized: "No picture right now") : nil)
@@ -253,21 +225,6 @@ struct FeedPicture: View {
                 zoomed = false
             }
         }
-    }
-}
-
-extension FeedPicture {
-    /// Says what the picture is, and credits Apple, in the corner.
-    fileprivate func sourceLabel(_ source: SpotVisuals.Source) -> some View {
-        Text(source == .lookAround ? "Look Around" : "3D map")
-            .font(.caption2.weight(.semibold))
-            .dynamicTypeSize(...DynamicTypeSize.xLarge)
-            .foregroundStyle(.white.opacity(0.85))
-            .padding(.horizontal, 7)
-            .padding(.vertical, 3)
-            .background(.black.opacity(0.35), in: Capsule())
-            .padding(.top, safeTop + 64)
-            .padding(.trailing, 14)
     }
 }
 
