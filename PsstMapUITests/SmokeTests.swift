@@ -35,9 +35,9 @@ final class SmokeTests: XCTestCase {
         let card = app.descendants(matching: .any).matching(identifier: "feed.card").firstMatch
         XCTAssertTrue(card.waitForExistence(timeout: 10))
         card.tap()
-        XCTAssertTrue(app.buttons["3D map"].firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["Full-screen map"].firstMatch.waitForExistence(timeout: 10))
         app.buttons["Close"].tap()
-        XCTAssertTrue(app.buttons["3D map"].firstMatch.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Full-screen map"].firstMatch.waitForNonExistence(timeout: 5))
 
         app.tabBars.buttons["Saved"].tap()
         XCTAssertTrue(app.navigationBars["Saved"].waitForExistence(timeout: 5))
@@ -65,10 +65,10 @@ final class SmokeTests: XCTestCase {
         app.buttons["Done"].tap()
 
         // Tapping the card opens the place page.
-        let card = app.staticTexts["Tower Bridge"].firstMatch
+        let card = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Tower Bridge' OR label CONTAINS ', Tower Bridge'")).firstMatch
         XCTAssertTrue(card.waitForExistence(timeout: 10))
         card.tap()
-        let threeD = app.buttons["3D map"].firstMatch
+        let threeD = app.buttons["Full-screen map"].firstMatch
         XCTAssertTrue(threeD.waitForExistence(timeout: 10))
 
         // One tap on 3D map opens it full screen, and one tap closes it again.
