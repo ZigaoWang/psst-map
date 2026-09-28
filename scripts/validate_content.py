@@ -509,16 +509,23 @@ def check_cross_file(report: Report, spots: list[dict]) -> None:
                 report.warn(a["where"], f"only {distance:.0f} m from {b['where']}; is this the same place?")
 
 
-def fetch_json(url: str, data: bytes | None = None, attempts: int = 4) -> object:
+def fetch_json(url: str, data: bytes | None = None, attempts: int = 5) -> object:
     last_error: Exception | None = None
     for attempt in range(attempts):
         request = urllib.request.Request(url, data=data, headers={"User-Agent": USER_AGENT})
         try:
             with urllib.request.urlopen(request, timeout=60) as response:
                 return json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            last_error = exc
+            if exc.code == 404:
+                raise
+            retry_after = exc.headers.get("Retry-After") if exc.headers else None
+            delay = float(retry_after) if retry_after and retry_after.isdigit() else 3 * (attempt + 1)
+            time.sleep(min(delay, 30))
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
             last_error = exc
-            time.sleep(2 * (attempt + 1))
+            time.sleep(3 * (attempt + 1))
     raise RuntimeError(f"request failed after {attempts} attempts: {url} ({last_error})")
 
 
@@ -526,19 +533,54 @@ def wikidata_coordinates(qids: list[str]) -> dict[str, list[tuple[float, float, 
     found: dict[str, list[tuple[float, float, float | None]]] = {}
     for start in range(0, len(qids), 50):
         batch = qids[start:start + 50]
-        url = ("https://www.wikidata.org/w/api.php?action=wbgetentities&props=claims&format=json&ids="
-               + "|".join(batch))
-        payload = fetch_json(url)
-        for qid, entity in payload.get("entities", {}).items():
-            redirected = entity.get("redirects", {}).get("from", qid)
-            coords = []
-            for claim in entity.get("claims", {}).get("P625", []):
-                value = claim.get("mainsnak", {}).get("datavalue", {}).get("value")
-                if value:
-                    coords.append((value["latitude"], value["longitude"], value.get("precision")))
-            found[redirected] = coords
-            found[qid] = coords
+        try:
+            found.update(_wikidata_api(batch))
+        except RuntimeError:
+            # The API rate limits shared IPs hard; the query service is a separate pool.
+            found.update(_wikidata_sparql(batch))
     return found
+
+
+def _wikidata_api(batch: list[str]) -> dict[str, list[tuple[float, float, float | None]]]:
+    found: dict[str, list[tuple[float, float, float | None]]] = {}
+    url = "https://www.wikidata.org/w/api.php?action=wbgetentities&props=claims&format=json&ids=" + "|".join(batch)
+    payload = fetch_json(url, attempts=3)
+    for qid, entity in payload.get("entities", {}).items():
+        coords = []
+        for claim in entity.get("claims", {}).get("P625", []):
+            value = claim.get("mainsnak", {}).get("datavalue", {}).get("value")
+            if value:
+                coords.append((value["latitude"], value["longitude"], value.get("precision")))
+        found[qid] = coords
+        redirected = entity.get("redirects", {}).get("from")
+        if redirected:
+            found[redirected] = coords
+    return found
+
+
+def _wikidata_sparql(batch: list[str]) -> dict[str, list[tuple[float, float, float | None]]]:
+    values = " ".join(f"wd:{qid}" for qid in batch)
+    query = f"""SELECT ?item ?lat ?lon ?precision WHERE {{
+      VALUES ?item {{ {values} }}
+      OPTIONAL {{ ?item p:P625/psv:P625 ?node .
+                 ?node wikibase:geoLatitude ?lat ; wikibase:geoLongitude ?lon .
+                 OPTIONAL {{ ?node wikibase:geoPrecision ?precision }} }}
+    }}"""
+    url = "https://query.wikidata.org/sparql?format=json&query=" + urllib.parse.quote(query)
+    payload = fetch_json(url)
+    found: dict[str, list[tuple[float, float, float | None]]] = {qid: [] for qid in batch}
+    for row in payload["results"]["bindings"]:
+        qid = row["item"]["value"].rsplit("/", 1)[-1]
+        if "lat" in row:
+            precision = float(row["precision"]["value"]) if "precision" in row else None
+            found.setdefault(qid, []).append((float(row["lat"]["value"]), float(row["lon"]["value"]), precision))
+    return found
+
+
+OVERPASS_ENDPOINTS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+]
 
 
 def osm_coordinates(refs: list[str]) -> dict[str, tuple[float, float]]:
@@ -547,8 +589,20 @@ def osm_coordinates(refs: list[str]) -> dict[str, tuple[float, float]]:
         batch = refs[start:start + 100]
         parts = "".join(f"{ref.split('/')[0]}({ref.split('/')[1]});" for ref in batch)
         query = f"[out:json][timeout:90];({parts});out center;"
-        payload = fetch_json("https://overpass-api.de/api/interpreter",
-                             data=urllib.parse.urlencode({"data": query}).encode())
+        payload = None
+        for endpoint in OVERPASS_ENDPOINTS:
+            try:
+                payload = fetch_json(endpoint, data=urllib.parse.urlencode({"data": query}).encode(), attempts=2)
+                break
+            except RuntimeError:
+                continue
+        if payload is None:
+            # Overpass is down or busy: ask the main OSM API one element at a time.
+            for ref in batch:
+                coord = _osm_api_center(ref)
+                if coord:
+                    found[ref] = coord
+            continue
         for element in payload.get("elements", []):
             ref = f"{element['type']}/{element['id']}"
             if "lat" in element:
@@ -557,6 +611,24 @@ def osm_coordinates(refs: list[str]) -> dict[str, tuple[float, float]]:
                 found[ref] = (element["center"]["lat"], element["center"]["lon"])
         time.sleep(1)
     return found
+
+
+def _osm_api_center(ref: str) -> tuple[float, float] | None:
+    """Same result as Overpass `out center`: a node's position, or the middle of a way's or relation's bounding box."""
+    kind, number = ref.split("/")
+    suffix = ".json" if kind == "node" else "/full.json"
+    try:
+        payload = fetch_json(f"https://api.openstreetmap.org/api/0.6/{kind}/{number}{suffix}", attempts=3)
+    except (RuntimeError, urllib.error.HTTPError):
+        return None
+    nodes = [e for e in payload.get("elements", []) if e.get("type") == "node" and "lat" in e]
+    if kind == "node":
+        return (nodes[0]["lat"], nodes[0]["lon"]) if nodes else None
+    if not nodes:
+        return None
+    lats = [n["lat"] for n in nodes]
+    lons = [n["lon"] for n in nodes]
+    return ((min(lats) + max(lats)) / 2, (min(lons) + max(lons)) / 2)
 
 
 def check_online(report: Report, spots: list[dict]) -> None:
