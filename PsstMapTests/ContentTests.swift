@@ -42,17 +42,17 @@ final class ContentTests: XCTestCase {
         }
     }
 
-    func testChinesePlacesAreShiftedAndOthersAreNot() throws {
+    func testOnlyChinesePlacesAreInMainlandChina() throws {
         let catalog = try ContentLoader.load().catalog
         for place in catalog.places {
-            let moved = place.location.distance(from: CLLocation(latitude: place.mapCoordinate.latitude,
-                                                                 longitude: place.mapCoordinate.longitude))
             if place.city == "Shanghai" {
                 XCTAssertTrue(place.isInMainlandChina, place.id)
-                XCTAssertGreaterThan(moved, 100, "\(place.id) should be shifted to GCJ-02")
+                let gcj = ChinaCoordinates.gcj02(fromWGS84: place.coordinate)
+                let moved = place.location.distance(from: CLLocation(latitude: gcj.latitude, longitude: gcj.longitude))
+                XCTAssertGreaterThan(moved, 100, place.id)
                 XCTAssertLessThan(moved, 1_000, place.id)
             } else {
-                XCTAssertEqual(moved, 0, accuracy: 0.001, "\(place.id) should not be shifted")
+                XCTAssertFalse(place.isInMainlandChina, place.id)
             }
         }
     }

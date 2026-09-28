@@ -10,10 +10,11 @@ nonisolated struct Place: Hashable, Identifiable, Sendable {
     let areaName: String
     let city: String
 
-    /// WGS-84, for distance math against Core Location.
+    /// WGS-84, as stored in the content. Use it for distance math against Core Location.
     let coordinate: CLLocationCoordinate2D
-    /// What to hand to MapKit. GCJ-02 in mainland China, otherwise the same as `coordinate`.
-    let mapCoordinate: CLLocationCoordinate2D
+
+    /// What to hand to MapKit: shifted to GCJ-02 when Apple Maps is drawing China in GCJ-02.
+    @MainActor var mapCoordinate: CLLocationCoordinate2D { MapDatum.shared.mapCoordinate(for: coordinate) }
 
     init(spot: Spot, area: Area) {
         self.id = "\(area.id)/\(spot.id)"
@@ -23,7 +24,6 @@ nonisolated struct Place: Hashable, Identifiable, Sendable {
         self.city = area.city
         let wgs = CLLocationCoordinate2D(latitude: spot.coordinate.latitude, longitude: spot.coordinate.longitude)
         self.coordinate = wgs
-        self.mapCoordinate = ChinaCoordinates.mapCoordinate(for: wgs)
     }
 
     var name: String { spot.name }

@@ -13,6 +13,8 @@ struct PlaceMapView: UIViewRepresentable {
     let onRegionChange: (MKCoordinateRegion) -> Void
     /// Set by the screen to ask for a one-off camera move to a region (for "locate me").
     let regionRequest: RegionRequest?
+    /// Changes when China coordinates switch between WGS-84 and GCJ-02, so pins get re-placed.
+    let datumVersion: Int
 
     struct RegionRequest: Equatable {
         let region: MKCoordinateRegion
@@ -48,7 +50,7 @@ struct PlaceMapView: UIViewRepresentable {
     func updateUIView(_ map: MKMapView, context: Context) {
         let coordinator = context.coordinator
         coordinator.parent = self
-        coordinator.syncAnnotations(on: map, places: places)
+        coordinator.syncAnnotations(on: map, places: places, datumVersion: datumVersion)
         if map.showsUserLocation != showsUserLocation {
             map.showsUserLocation = showsUserLocation
         }
@@ -75,7 +77,14 @@ struct PlaceMapView: UIViewRepresentable {
             self.parent = parent
         }
 
-        func syncAnnotations(on map: MKMapView, places: [Place]) {
+        private var datumVersion = 0
+
+        func syncAnnotations(on map: MKMapView, places: [Place], datumVersion: Int) {
+            if datumVersion != self.datumVersion {
+                self.datumVersion = datumVersion
+                map.removeAnnotations(Array(annotationsByID.values))
+                annotationsByID.removeAll()
+            }
             let newIDs = Set(places.map(\.id))
             guard newIDs != Set(annotationsByID.keys) else { return }
             let stale = annotationsByID.filter { !newIDs.contains($0.key) }
@@ -132,8 +141,8 @@ struct PlaceMapView: UIViewRepresentable {
                 DispatchQueue.main.async { [weak self] in self?.parent.selectedID = id }
             case .area(let id):
                 guard let bounds = parent.areaBounds(id) else { return }
-                let sw = MKMapPoint(ChinaCoordinates.mapCoordinate(for: .init(latitude: bounds.south, longitude: bounds.west)))
-                let ne = MKMapPoint(ChinaCoordinates.mapCoordinate(for: .init(latitude: bounds.north, longitude: bounds.east)))
+                let sw = MKMapPoint(MapDatum.shared.mapCoordinate(for: .init(latitude: bounds.south, longitude: bounds.west)))
+                let ne = MKMapPoint(MapDatum.shared.mapCoordinate(for: .init(latitude: bounds.north, longitude: bounds.east)))
                 let rect = MKMapRect(x: min(sw.x, ne.x), y: min(sw.y, ne.y),
                                      width: abs(ne.x - sw.x), height: abs(ne.y - sw.y))
                 map.setVisibleMapRect(rect, edgePadding: UIEdgeInsets(top: 110, left: 24, bottom: 90, right: 24),

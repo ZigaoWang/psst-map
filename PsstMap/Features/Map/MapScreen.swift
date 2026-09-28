@@ -32,7 +32,8 @@ struct MapScreen: View {
             areaBounds: { app.catalog.area(id: $0)?.bounds },
             showsUserLocation: app.location.isAuthorized,
             onRegionChange: updateVisibleArea,
-            regionRequest: regionRequest
+            regionRequest: regionRequest,
+            datumVersion: MapDatum.shared.version
         )
         .ignoresSafeArea()
         .overlay(alignment: .top) { topBar }
@@ -140,8 +141,8 @@ struct MapScreen: View {
         }
         let center = region.center
         let containing = app.catalog.areas.first { area in
-            let sw = ChinaCoordinates.mapCoordinate(for: .init(latitude: area.bounds.south, longitude: area.bounds.west))
-            let ne = ChinaCoordinates.mapCoordinate(for: .init(latitude: area.bounds.north, longitude: area.bounds.east))
+            let sw = MapDatum.shared.mapCoordinate(for: .init(latitude: area.bounds.south, longitude: area.bounds.west))
+            let ne = MapDatum.shared.mapCoordinate(for: .init(latitude: area.bounds.north, longitude: area.bounds.east))
             return (sw.latitude...ne.latitude).contains(center.latitude)
                 && (sw.longitude...ne.longitude).contains(center.longitude)
         }
@@ -186,7 +187,7 @@ struct MapScreen: View {
     }
 
     private func centerOn(_ location: CLLocation) {
-        let center = ChinaCoordinates.mapCoordinate(for: location.coordinate)
+        let center = MapDatum.shared.mapCoordinate(for: location.coordinate)
         regionRequest = .init(region: MKCoordinateRegion(center: center, latitudinalMeters: 1_400, longitudinalMeters: 1_400))
     }
 }

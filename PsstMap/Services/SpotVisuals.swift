@@ -167,7 +167,8 @@ final class SpotVisuals {
 
     private func cacheKey(place: Place, size: CGSize, scale: CGFloat, dark: Bool) -> String {
         let safeID = place.id.replacingOccurrences(of: "/", with: "__")
-        return "\(safeID)-\(Int(size.width))x\(Int(size.height))@\(Int(scale))-\(dark ? "d" : "l")"
+        let datum = place.isInMainlandChina && MapDatum.shared.chinaUsesGCJ02 ? "-gcj" : ""
+        return "\(safeID)\(datum)-\(Int(size.width))x\(Int(size.height))@\(Int(scale))-\(dark ? "d" : "l")"
     }
 
     private func readDisk(key: String) async -> Picture? {

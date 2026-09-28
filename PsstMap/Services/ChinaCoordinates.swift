@@ -3,11 +3,12 @@ import Foundation
 
 /// Converts WGS-84 coordinates to GCJ-02 for places in mainland China.
 ///
-/// Content always stores WGS-84 (from Wikidata or OpenStreetMap). Apple Maps draws mainland China from
-/// licensed map data in the GCJ-02 system, which is offset from WGS-84 by a few hundred meters. Anything
-/// placed on the map (pins, cameras, snapshots, handoff to Apple Maps) must go through `mapCoordinate(for:)`.
-/// Distance math against Core Location, which reports WGS-84 everywhere, uses the original coordinate.
-/// Hong Kong, Macau, and Taiwan are not shifted.
+/// Content always stores WGS-84 (from Wikidata or OpenStreetMap). When Apple Maps uses its China map
+/// provider, it draws mainland China in GCJ-02, which is offset from WGS-84 by a few hundred meters.
+/// `MapDatum` decides whether the shift applies right now; anything placed on the map (pins, cameras,
+/// snapshots, handoff to Apple Maps) goes through `Place.mapCoordinate`. Distance math against
+/// Core Location, which reports WGS-84 everywhere, uses the original coordinate.
+/// Hong Kong, Macau, and Taiwan are never shifted.
 nonisolated enum ChinaCoordinates {
     private static let a = 6378245.0
     private static let ee = 0.006_693_421_622_965_943_23
@@ -41,11 +42,6 @@ nonisolated enum ChinaCoordinates {
                 && coordinate.longitude >= box.1 && coordinate.longitude <= box.3
         }
         return included.contains(where: inside) && !excluded.contains(where: inside)
-    }
-
-    /// The coordinate to use on Apple Maps for a WGS-84 coordinate.
-    static func mapCoordinate(for wgs84: CLLocationCoordinate2D) -> CLLocationCoordinate2D {
-        isInMainlandChina(wgs84) ? gcj02(fromWGS84: wgs84) : wgs84
     }
 
     static func gcj02(fromWGS84 wgs: CLLocationCoordinate2D) -> CLLocationCoordinate2D {
