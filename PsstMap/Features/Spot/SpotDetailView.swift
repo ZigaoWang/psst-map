@@ -1,57 +1,85 @@
 import MapKit
 import SwiftUI
 
-/// Everything about one place: its picture, its facts, and what you can do with it.
+/// A place, presented as a sheet. Nearby places open inside it, with a back button.
 struct SpotDetailView: View {
     let place: Place
     /// Hidden when the page was opened from the map already.
     var showsMapButton = true
 
+    var body: some View {
+        NavigationStack {
+            PlacePage(place: place, showsMapButton: showsMapButton)
+                .navigationDestination(for: Place.self) { next in
+                    PlacePage(place: next, showsMapButton: showsMapButton)
+                }
+        }
+    }
+}
+
+/// Everything about one place: a live map you can move around at the top, and the stories below it.
+struct PlacePage: View {
+    let place: Place
+    let showsMapButton: Bool
+
     @Environment(AppModel.self) private var app
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var scrolled: CGFloat = 0
     @State private var lookAroundScene: MKLookAroundScene?
     @State private var showsLookAround = false
     @State private var showsAerial = false
 
+    private var fullMapHeight: CGFloat { typeSize.isAccessibilitySize ? 240 : 320 }
+    private let collapsedMapHeight: CGFloat = 150
+
+    /// The map gives up height as the text scrolls up, down to a strip that still shows where you are.
+    private var mapHeight: CGFloat {
+        max(collapsedMapHeight, fullMapHeight - max(scrolled, 0))
+    }
+
     var body: some View {
-        NavigationStack {
+        ZStack(alignment: .top) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    SpotHero(place: place, lookAroundScene: lookAroundScene,
-                             onLookAround: { showsLookAround = true },
-                             onAerial: { showsAerial = true })
-                        .frame(height: typeSize.isAccessibilitySize ? 260 : 340)
+                    GeometryReader { proxy in
+                        Color.clear.preference(key: ScrollOffsetKey.self,
+                                               value: -proxy.frame(in: .named("page")).minY)
+                    }
+                    .frame(height: fullMapHeight)
 
-                    VStack(alignment: .leading, spacing: 22) {
+                    VStack(alignment: .leading, spacing: 28) {
                         header
                         actions
-                        VStack(spacing: 14) {
-                            ForEach(place.spot.facts) { fact in
-                                FactCard(fact: fact)
-                            }
-                        }
+                        stories
+                        nearby
                         footer
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 20)
-                    .padding(.bottom, 32)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 22)
+                    .padding(.bottom, 40)
                 }
             }
-            .ignoresSafeArea(edges: .top)
-            .background(Theme.screenBackground)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(.body.weight(.semibold))
-                    }
-                    .accessibilityLabel(String(localized: "Close"))
+            .coordinateSpace(name: "page")
+            .onPreferenceChange(ScrollOffsetKey.self) { scrolled = $0 }
+
+            mapHeader
+                .frame(height: mapHeight)
+        }
+        .ignoresSafeArea(edges: .top)
+        .background(Theme.screenBackground)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.body.weight(.semibold))
                 }
+                .accessibilityLabel(String(localized: "Close"))
             }
         }
         .lookAroundViewer(isPresented: $showsLookAround, initialScene: lookAroundScene, allowsNavigation: true,
@@ -60,25 +88,66 @@ struct SpotDetailView: View {
             AerialMapScreen(place: place)
         }
         .task(id: place.id) {
-            lookAroundScene = await SpotVisuals.shared.lookAroundScene(for: place)
+            let scene = await SpotVisuals.shared.lookAroundScene(for: place)
+            withAnimation(.snappy) { lookAroundScene = scene }
         }
     }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            let layout = typeSize.isAccessibilitySize
-                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 6))
-                : AnyLayout(HStackLayout(spacing: 8))
-            layout {
-                KindBadge(kind: place.spot.kind)
-                Text("\(place.areaName), \(place.city)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+    // MARK: Map
+
+    private var mapHeader: some View {
+        AerialMapView(place: place, animated: !reduceMotion)
+            // Bottom right, so Apple's Maps logo and Legal link stay visible at the bottom left.
+            .overlay(alignment: .bottomTrailing) {
+                HStack(spacing: 8) {
+                    if lookAroundScene != nil {
+                        Button {
+                            showsLookAround = true
+                        } label: {
+                            Label("Look Around", systemImage: "binoculars.fill")
+                                .font(.subheadline.weight(.semibold))
+                        }
+                        .floatingButtonStyle()
+                        .transition(.scale.combined(with: .opacity))
+                    }
+                    Button {
+                        showsAerial = true
+                    } label: {
+                        Image(systemName: "arrow.up.left.and.arrow.down.right")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(width: 20, height: 20)
+                    }
+                    .floatingButtonStyle(circle: true)
+                    .accessibilityLabel(String(localized: "Full-screen map"))
+                }
+                .foregroundStyle(.primary)
+                .padding(12)
+                .opacity(mapHeight > collapsedMapHeight + 40 ? 1 : 0)
+                .animation(.easeOut(duration: 0.2), value: mapHeight > collapsedMapHeight + 40)
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             }
+            .clipShape(UnevenRoundedRectangle(bottomLeadingRadius: 22, bottomTrailingRadius: 22, style: .continuous))
+            .shadow(color: .black.opacity(scrolled > 4 ? 0.15 : 0), radius: 10, y: 4)
+    }
+
+    // MARK: Header
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(place.spot.kind.color)
+                    .frame(width: 9, height: 9)
+                Text("\(place.spot.kind.label) · \(place.areaName)")
+            }
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(.secondary)
+
             Text(place.name)
                 .font(.largeTitle.weight(.bold))
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
+
             if let local = place.spot.localName {
                 Text(local)
                     .font(.title3)
@@ -86,41 +155,71 @@ struct SpotDetailView: View {
                     .textSelection(.enabled)
             }
         }
-        .padding(.horizontal, 4)
     }
 
     private var actions: some View {
         let isSaved = app.saved.contains(place.id)
-        return HStack(spacing: 10) {
-            Button {
+        return HStack(spacing: 8) {
+            PageAction(title: isSaved ? String(localized: "Saved") : String(localized: "Save"),
+                       symbol: isSaved ? "bookmark.fill" : "bookmark", isOn: isSaved) {
                 withAnimation(.snappy) { app.saved.toggle(place.id) }
-            } label: {
-                Label(isSaved ? String(localized: "Saved") : String(localized: "Save"),
-                      systemImage: isSaved ? "bookmark.fill" : "bookmark")
-                    .font(.body.weight(.semibold))
-                    .frame(maxWidth: .infinity, minHeight: 50)
-                    .foregroundStyle(isSaved ? Color.primary : Color(uiColor: .systemBackground))
-                    .background(isSaved ? AnyShapeStyle(Theme.cardBackground) : AnyShapeStyle(Color.primary),
-                                in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
-            .buttonStyle(PressableButtonStyle())
             .sensoryFeedback(.selection, trigger: isSaved)
-            .accessibilityAddTraits(isSaved ? .isSelected : [])
+
+            PageAction(title: String(localized: "Walk here"), symbol: "figure.walk") {
+                openInMaps()
+            }
 
             if showsMapButton {
-                IconAction(symbol: "map", label: String(localized: "Show on map")) {
+                PageAction(title: String(localized: "On map"), symbol: "map") {
                     dismiss()
                     app.showOnMap(place)
                 }
             }
+
             ShareLink(item: ShareText.text(for: place)) {
-                IconActionLabel(symbol: "square.and.arrow.up")
+                PageActionLabel(title: String(localized: "Share"), symbol: "square.and.arrow.up", isOn: false)
             }
             .buttonStyle(PressableButtonStyle())
-            .accessibilityLabel(String(localized: "Share"))
-            IconAction(symbol: "figure.walk", label: String(localized: "Walking directions")) {
-                openInMaps()
+        }
+    }
+
+    // MARK: Stories
+
+    private var stories: some View {
+        VStack(alignment: .leading, spacing: 32) {
+            ForEach(Array(place.spot.facts.enumerated()), id: \.element.id) { index, fact in
+                FactCard(fact: fact, number: index + 1, accent: place.spot.kind.color)
+            }
+        }
+    }
+
+    // MARK: Nearby
+
+    private var neighbors: [Place] {
+        Array(PlaceCarousel.neighborhood(of: place, in: app.visiblePlaces, limit: 7).dropFirst())
+    }
+
+    @ViewBuilder
+    private var nearby: some View {
+        if !neighbors.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Nearby")
+                    .font(.title3.weight(.bold))
+                    .accessibilityAddTraits(.isHeader)
+                ScrollView(.horizontal) {
+                    HStack(spacing: 12) {
+                        ForEach(neighbors) { neighbor in
+                            NavigationLink(value: neighbor) {
+                                NearbyCard(place: neighbor, from: place)
+                            }
+                            .buttonStyle(PressableButtonStyle())
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                }
+                .scrollIndicators(.hidden)
+                .padding(.horizontal, -20)
             }
         }
     }
@@ -135,11 +234,10 @@ struct SpotDetailView: View {
                         .underline()
                 }
             }
-            Text("Spotted something wrong? Every fact links to its sources.")
+            Text("Spotted something wrong? Every story links to its sources.")
         }
         .font(.footnote)
         .foregroundStyle(.secondary)
-        .padding(.horizontal, 4)
     }
 
     private func openInMaps() {
@@ -155,30 +253,81 @@ struct SpotDetailView: View {
     }
 }
 
-private struct IconAction: View {
+private struct ScrollOffsetKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
+}
+
+private struct PageAction: View {
+    let title: String
     let symbol: String
-    let label: String
+    var isOn = false
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            IconActionLabel(symbol: symbol)
+            PageActionLabel(title: title, symbol: symbol, isOn: isOn)
         }
         .buttonStyle(PressableButtonStyle())
-        .accessibilityLabel(label)
+        .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 }
 
-private struct IconActionLabel: View {
+private struct PageActionLabel: View {
+    let title: String
     let symbol: String
+    let isOn: Bool
 
     var body: some View {
-        Image(systemName: symbol)
-            .font(.body.weight(.semibold))
-            .foregroundStyle(.primary)
-            .frame(width: 54, height: 50)
-            .background(Theme.cardBackground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        VStack(spacing: 4) {
+            Image(systemName: symbol)
+                .font(.body.weight(.semibold))
+                .contentTransition(.symbolEffect(.replace))
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .foregroundStyle(isOn ? Color(uiColor: .systemBackground) : .primary)
+        .frame(maxWidth: .infinity, minHeight: 56)
+        .background(isOn ? AnyShapeStyle(Color.primary) : AnyShapeStyle(Theme.cardBackground),
+                    in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+}
+
+/// A small picture card for a place near the one being read.
+private struct NearbyCard: View {
+    let place: Place
+    let from: Place
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            PlaceThumbnail(place: place)
+                .frame(width: 150, height: 100)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(place.name)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                Text(distance)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(width: 150, alignment: .leading)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var distance: String {
+        let meters = place.location.distance(from: from.location)
+        let formatter = MeasurementFormatter()
+        formatter.unitOptions = .naturalScale
+        formatter.numberFormatter.maximumFractionDigits = meters < 1_000 ? 0 : 1
+        let rounded = meters < 1_000 ? (meters / 10).rounded() * 10 : meters
+        return String(localized: "\(formatter.string(from: Measurement(value: rounded, unit: UnitLength.meters))) away")
     }
 }
 
