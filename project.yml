@@ -83,3 +83,6 @@ schemes:
       gatherCoverageData: false
     run:
       config: Debug
+      # Metal API validation trips an assert inside MapKit's own 3D and Look Around renderers
+      # (Apple's code, not ours), which crashes debug runs on device. Release builds never run it.
+      enableGPUValidationMode: false
