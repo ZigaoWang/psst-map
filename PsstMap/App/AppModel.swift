@@ -20,6 +20,8 @@ final class AppModel {
         enum Target: Equatable {
             case place(String)
             case area(String)
+            /// Pan just enough to bring a pin into view, keeping the zoom.
+            case reveal(String)
         }
         let target: Target
         let token = UUID()

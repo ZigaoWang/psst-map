@@ -12,6 +12,9 @@ struct MapScreen: View {
     @State private var isLocating = false
     @State private var locationProblem: LocationProblem?
     @State private var detailPlace: Place?
+    /// The places in the card carousel. Rebuilt around a pin when it is tapped on the map,
+    /// but left alone while the person swipes through it.
+    @State private var carousel: [Place] = []
 
     enum LocationProblem: Identifiable {
         case denied, unavailable, nothingNearby
@@ -36,11 +39,12 @@ struct MapScreen: View {
         .ignoresSafeArea()
         .overlay(alignment: .top) { topBar }
         .overlay(alignment: .bottom) {
-            if let place = selectedPlace {
-                PlacePreviewCard(place: place, onOpen: { detailPlace = place }, onClose: { selectedID = nil })
-                    .padding(.horizontal, 12)
+            if !carousel.isEmpty {
+                PlaceCarousel(places: carousel, selectedID: $selectedID,
+                              onOpen: { detailPlace = $0 },
+                              onClose: { selectedID = nil },
+                              onReveal: { app.mapFocus = AppModel.MapFocus(target: .reveal($0)) })
                     .padding(.bottom, 10)
-                    .frame(maxWidth: 560)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
@@ -69,6 +73,15 @@ struct MapScreen: View {
             }
         }
         #endif
+        .onChange(of: selectedID) { _, id in
+            guard let id else {
+                carousel = []
+                return
+            }
+            if !carousel.contains(where: { $0.id == id }), let place = app.catalog.place(id: id) {
+                carousel = PlaceCarousel.neighborhood(of: place, in: app.visiblePlaces)
+            }
+        }
         .onChange(of: app.hiddenKinds) {
             if let place = selectedPlace, app.hiddenKinds.contains(place.spot.kind) { selectedID = nil }
         }
