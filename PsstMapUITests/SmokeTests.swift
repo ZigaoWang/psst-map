@@ -28,9 +28,9 @@ final class SmokeTests: XCTestCase {
         let card = app.descendants(matching: .any).matching(identifier: "feed.card").firstMatch
         XCTAssertTrue(card.waitForExistence(timeout: 10))
         card.tap()
-        XCTAssertTrue(app.buttons["Read more"].firstMatch.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["3D map"].firstMatch.waitForExistence(timeout: 10))
         app.buttons["Close"].tap()
-        XCTAssertTrue(app.buttons["Read more"].firstMatch.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["3D map"].firstMatch.waitForNonExistence(timeout: 5))
 
         app.tabBars.buttons["Saved"].tap()
         XCTAssertTrue(app.navigationBars["Saved"].waitForExistence(timeout: 5))
