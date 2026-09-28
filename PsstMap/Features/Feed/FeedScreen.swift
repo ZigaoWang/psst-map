@@ -57,6 +57,9 @@ struct FeedScreen: View {
         }
         .environment(\.colorScheme, .dark)
         .statusBarHidden(true)
+        // The feed is always dark, so the tab bar above it must be too, or its items vanish.
+        .toolbarColorScheme(.dark, for: .tabBar)
+        .modifier(DarkTabBarBackground())
         .sheet(item: $detailPlace) { place in
             SpotDetailView(place: place)
                 .presentationDetents([.large])
@@ -266,5 +269,18 @@ struct FeedEndCard: View {
         .padding(40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black)
+    }
+}
+
+/// Before Liquid Glass, the tab bar needs an explicit dark background to pick up the dark scheme.
+private struct DarkTabBarBackground: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content
+        } else {
+            content
+                .toolbarBackground(Color.black, for: .tabBar)
+                .toolbarBackground(.visible, for: .tabBar)
+        }
     }
 }
