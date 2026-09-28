@@ -204,6 +204,8 @@ struct FeedPicture: View {
     @State private var didFail = false
     @State private var zoomed = false
     @Environment(\.displayScale) private var displayScale
+    @Environment(\.safeAreaInsets) fileprivate var safeArea
+    fileprivate var safeTop: CGFloat { safeArea.top }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -216,6 +218,7 @@ struct FeedPicture: View {
                     .scaleEffect(zoomed ? 1.09 : 1.0, anchor: .center)
                     .id(picture.image)
                     .transition(.opacity)
+                sourceLabel(picture.source)
             } else {
                 VisualPlaceholder(kind: place.spot.kind, isLoading: !didFail,
                                   message: didFail ? String(localized: "No picture right now") : nil)
@@ -239,6 +242,20 @@ struct FeedPicture: View {
                 zoomed = false
             }
         }
+    }
+}
+
+extension FeedPicture {
+    /// Says what the picture is, and credits Apple, in the corner.
+    fileprivate func sourceLabel(_ source: SpotVisuals.Source) -> some View {
+        Text(source == .lookAround ? "Look Around" : "3D map")
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(.white.opacity(0.85))
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background(.black.opacity(0.35), in: Capsule())
+            .padding(.top, safeTop + 64)
+            .padding(.trailing, 14)
     }
 }
 
