@@ -132,7 +132,7 @@ struct PlaceMapView: UIViewRepresentable {
             case .place(let id):
                 guard let annotation = annotationsByID[id] else { return }
                 let point = MKMapPoint(annotation.coordinate)
-                let span = 700 * MKMapPointsPerMeterAtLatitude(annotation.coordinate.latitude)
+                let span = 450 * MKMapPointsPerMeterAtLatitude(annotation.coordinate.latitude)
                 let rect = MKMapRect(x: point.x - span / 2, y: point.y - span / 2, width: span, height: span)
                 // Keep the pin clear of the place card that slides up with it.
                 let bottom: CGFloat = 230
@@ -225,6 +225,21 @@ final class PlaceMarkerView: MKMarkerAnnotationView {
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
+
+    override func setSelected(_ selected: Bool, animated: Bool) {
+        super.setSelected(selected, animated: animated)
+        // The pin you picked always stands on its own, even where pins are dense.
+        clusteringIdentifier = selected ? nil : "place"
+        displayPriority = selected ? .required : .defaultHigh
+        zPriority = selected ? .max : .defaultUnselected
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        clusteringIdentifier = "place"
+        displayPriority = .defaultHigh
+        zPriority = .defaultUnselected
+    }
 
     private func configure() {
         guard let place = (annotation as? PlaceAnnotation)?.place else { return }
