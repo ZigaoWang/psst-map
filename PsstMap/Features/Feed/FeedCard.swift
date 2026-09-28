@@ -10,6 +10,7 @@ struct FeedCard: View {
     @Environment(AppModel.self) private var app
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.safeAreaInsets) private var safeArea
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -34,6 +35,7 @@ struct FeedCard: View {
             .allowsHitTesting(false)
 
             content
+                .frame(maxWidth: 760)
                 .padding(.horizontal, 20)
                 .padding(.bottom, bottomPadding)
         }
@@ -59,8 +61,8 @@ struct FeedCard: View {
     }
 
     private var bottomPadding: CGFloat {
-        // Clear the floating tab bar.
-        safeArea.bottom + 64
+        // Clear the floating tab bar, which sits at the top on iPad.
+        safeArea.bottom + (horizontalSizeClass == .regular ? 40 : 64)
     }
 
     private var fact: Fact { place.leadFact }
@@ -122,6 +124,7 @@ struct FeedCard: View {
             }
             .buttonStyle(.plain)
         }
+        .frame(maxWidth: 620, alignment: .leading)
         .frame(maxWidth: .infinity, alignment: .leading)
         .shadow(color: .black.opacity(0.35), radius: 6, y: 1)
     }
