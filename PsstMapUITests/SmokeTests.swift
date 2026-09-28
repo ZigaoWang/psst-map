@@ -15,10 +15,12 @@ final class SmokeTests: XCTestCase {
     }
 
     @MainActor
-    func testTabsAndFeedOpenDetail() {
+    func testTabsAndFeedOpenDetail() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-onboarding.completed", "YES"]
         app.launch()
+        // Without content installed the app shows its load error instead of tabs.
+        try XCTSkipIf(app.buttons["Try again"].waitForExistence(timeout: 3), "No area files in Content/areas")
 
         let feedTab = app.tabBars.buttons["Feed"]
         XCTAssertTrue(feedTab.waitForExistence(timeout: 10))
