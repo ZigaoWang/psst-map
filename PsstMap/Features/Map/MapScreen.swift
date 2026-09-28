@@ -56,6 +56,15 @@ struct MapScreen: View {
             MapKeySheet()
                 .presentationDetents([.medium, .large])
         }
+        #if DEBUG
+        .onAppear {
+            switch UserDefaults.standard.string(forKey: "debug.sheet") {
+            case "areas": showsAreas = true
+            case "key": showsKey = true
+            default: break
+            }
+        }
+        #endif
         .onChange(of: selectedID) { old, new in
             if old == nil, new != nil { detent = .medium }
             #if DEBUG
