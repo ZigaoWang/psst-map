@@ -10,7 +10,6 @@ struct FeedScreen: View {
     @State private var detailPlace: Place?
     @State private var isLocating = false
     @State private var locationMessage: String?
-    @State private var seed = UInt64.random(in: 0...UInt64.max)
     @State private var pageSize: CGSize?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -176,7 +175,7 @@ struct FeedScreen: View {
                 }
             }
         } else {
-            show(FeedOrder.order(places, seen: app.seen.ids, seed: seed))
+            show(FeedOrder.order(places, seen: app.seen.ids, seed: app.feedSeed))
         }
     }
 
@@ -188,7 +187,7 @@ struct FeedScreen: View {
 
     private func restart() {
         app.seen.forget(items.map(\.id))
-        seed = UInt64.random(in: 0...UInt64.max)
+        app.feedSeed = UInt64.random(in: 0...UInt64.max)
         withAnimation(reduceMotion ? nil : .smooth) { rebuild() }
     }
 

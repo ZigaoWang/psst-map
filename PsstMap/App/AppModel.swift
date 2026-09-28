@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import Observation
 
 /// App-wide state shared by the tabs.
@@ -28,6 +29,8 @@ final class AppModel {
     private(set) var catalog: Catalog = .empty
     var selectedTab: Tab = .map
     var mapFocus: MapFocus?
+    /// Shuffles the feed once per session, so it stays put while you scroll and can be warmed up early.
+    var feedSeed = UInt64.random(in: 0...UInt64.max)
 
     let saved = SavedStore()
     let seen = SeenStore()
@@ -41,8 +44,20 @@ final class AppModel {
             }.value
             catalog = result.catalog
             loadState = .loaded
+            warmUpFeed()
         } catch {
             loadState = .failed(error.localizedDescription)
+        }
+    }
+
+    /// Starts making the first feed pictures right away, so the feed is ready by the time someone opens it.
+    private func warmUpFeed() {
+        let first = FeedOrder.order(catalog.places, seen: seen.ids, seed: feedSeed).prefix(3)
+        let size = FeedCard.pictureSize(for: UIScreen.main.bounds.size)
+        Task(priority: .utility) {
+            for place in first {
+                await SpotVisuals.shared.picture(for: place, size: size, scale: 2, dark: true)
+            }
         }
     }
 
