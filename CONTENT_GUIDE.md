@@ -21,7 +21,9 @@ People browse it like a feed. Every card has to earn the next swipe.
 
 ## What makes a good spot
 
-A spot is one specific, findable thing: a building, a station, a bridge, a roundabout, a staircase, a lamppost, a pub, a bollard, a hotel, a plaque, a dock wall. Someone should be able to walk up to it and point.
+A spot is one specific, findable, physical thing with its own pin: a single building, a bridge, a station entrance, a statue, a hotel, a roundabout, a street corner, a staircase, a lamppost, a pub, a bollard, a plaque, a dock wall. Someone should be able to walk up to it and point.
+
+An area is only how the research is split up. It is never a spot. Never write one entry for a whole district, neighborhood, estate, or street network ("Canary Wharf", "the Bund", "Xintiandi"). If a street is the spot, it must be one short, specific street or alley with its own story, and its pin goes on that street. If a big complex has several good stories, split it into its parts (the station entrance, the clock tower, the gate) and give each its own pin.
 
 Good spots:
 
@@ -36,7 +38,7 @@ Leave a spot out if:
 - You cannot find a solid source for the surprising part.
 - It is private in a way that would send people somewhere they should not go (a private home, a restricted site). Public exteriors of private buildings are fine.
 
-Aim for roughly 25 to 40 spots per area, each with 2 to 4 facts. Quality beats count: 20 great spots are better than 40 thin ones. One excellent fact is enough for a spot to exist.
+Aim for 20 to 40 spots per area, each with 2 to 4 facts, and make at least half of them ordinary places rather than famous landmarks. Quality beats count: 20 great spots are better than 40 thin ones. One excellent fact is enough for a spot to exist.
 
 ## What makes a good fact
 
@@ -126,7 +128,9 @@ Good sources, roughly in order:
 - Official listings and records (Historic England, UK Parliament, Survey of London, national heritage boards, city archives).
 - The owner or operator (Transport for London, the Canal & River Trust, the building's own history page).
 - Museums, universities, and academic publications.
-- Reputable newspapers and magazines, and long-running specialist sites with a track record (for London: Londonist, Ian Visits, London Historians; for Shanghai: Shanghai municipal government sites, SHINE, Sixth Tone, the Shanghai Archives; for Kuala Lumpur: The Star, New Straits Times, Malay Mail, Badan Warisan Malaysia).
+- Reputable newspapers and magazines, and long-running specialist sites with a track record (for London: Londonist, Ian Visits, London Historians; for Shanghai: the Shanghai local gazetteers (上海地方志, shtong.gov.cn), Shanghai municipal and district government sites, the Shanghai Archives, The Paper (澎湃), SHINE, Sixth Tone; for Kuala Lumpur: The Star, New Straits Times, Malay Mail, Badan Warisan Malaysia).
+
+Do not rely only on English sources outside English-speaking places. For Shanghai, Chinese Wikipedia and the district gazetteers (区志) and specialist gazetteers (专志) on shtong.gov.cn usually have far more detail about individual buildings, bridges, and streets than anything in English; read them, then cite the gazetteer or other primary source. The same goes for Malay and Chinese sources in Kuala Lumpur.
 
 Avoid content farms, AI-written listicles, and travel sites that do not cite anything. For legends, cite a source that tells the story and, ideally, one that examines it.
 
