@@ -29,6 +29,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.psstmap.ios
+        DEVELOPMENT_TEAM: 432GL3WKY2
+        CODE_SIGN_STYLE: Automatic
         PRODUCT_NAME: PsstMap
         INFOPLIST_KEY_CFBundleDisplayName: Psst
         TARGETED_DEVICE_FAMILY: "1,2"
