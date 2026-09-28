@@ -50,6 +50,7 @@ struct FactCard: View {
                     Image(systemName: "chevron.down")
                         .imageScale(.small)
                         .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                        .accessibilityHidden(true)
                 }
                 .font(.subheadline.weight(.semibold))
                 .frame(minHeight: 44)

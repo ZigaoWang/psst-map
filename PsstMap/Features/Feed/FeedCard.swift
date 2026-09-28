@@ -116,6 +116,7 @@ struct FeedCard: View {
                     Text(moreLabel)
                     Image(systemName: "chevron.right")
                         .imageScale(.small)
+                        .accessibilityHidden(true)
                 }
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.white)
