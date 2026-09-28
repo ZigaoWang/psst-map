@@ -1,0 +1,31 @@
+import CoreLocation
+import XCTest
+@testable import PsstMap
+
+final class ChinaCoordinatesTests: XCTestCase {
+    func testKnownBeijingVector() {
+        // Reference value used by the widely used eviltransform implementations.
+        let gcj = ChinaCoordinates.gcj02(fromWGS84: .init(latitude: 39.915, longitude: 116.404))
+        XCTAssertEqual(gcj.latitude, 39.91640428150164, accuracy: 1e-9)
+        XCTAssertEqual(gcj.longitude, 116.41024449916938, accuracy: 1e-9)
+    }
+
+    func testShanghaiIsInMainlandChina() {
+        XCTAssertTrue(ChinaCoordinates.isInMainlandChina(.init(latitude: 31.2397, longitude: 121.4998)))
+    }
+
+    func testPlacesOutsideMainlandChinaAreUnchanged() {
+        let places: [CLLocationCoordinate2D] = [
+            .init(latitude: 51.5007, longitude: -0.1246),  // London
+            .init(latitude: 3.1466, longitude: 101.7113),  // Kuala Lumpur
+            .init(latitude: 22.2855, longitude: 114.1577), // Hong Kong
+            .init(latitude: 22.1987, longitude: 113.5439), // Macau
+            .init(latitude: 25.0330, longitude: 121.5654), // Taipei
+        ]
+        for place in places {
+            let mapped = ChinaCoordinates.mapCoordinate(for: place)
+            XCTAssertEqual(mapped.latitude, place.latitude)
+            XCTAssertEqual(mapped.longitude, place.longitude)
+        }
+    }
+}
