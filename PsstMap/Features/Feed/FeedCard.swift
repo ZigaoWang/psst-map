@@ -47,6 +47,7 @@ struct FeedCard: View {
         .accessibilityLabel(accessibilityText)
         .accessibilityHint(String(localized: "Double-tap for the full story and sources"))
         .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("feed.card")
         .accessibilityAction(named: app.saved.contains(place.id) ? String(localized: "Remove from saved") : String(localized: "Save")) {
             app.saved.toggle(place.id)
         }

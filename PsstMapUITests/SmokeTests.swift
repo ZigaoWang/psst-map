@@ -24,9 +24,9 @@ final class SmokeTests: XCTestCase {
         let feedTab = app.buttons["Feed"]
         XCTAssertTrue(feedTab.waitForExistence(timeout: 10))
         feedTab.tap()
-        let more = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Read the story'")).firstMatch
-        XCTAssertTrue(more.waitForExistence(timeout: 10))
-        more.tap()
+        let card = app.descendants(matching: .any).matching(identifier: "feed.card").firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 10))
+        card.tap()
         XCTAssertTrue(app.buttons["Read more"].firstMatch.waitForExistence(timeout: 10))
         app.buttons["Close"].tap()
 
