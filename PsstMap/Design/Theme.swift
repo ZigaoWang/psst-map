@@ -113,6 +113,49 @@ extension Fact.Category {
         case .other: String(localized: "Story")
         }
     }
+
+    var filterDescription: String {
+        switch self {
+        case .name: String(localized: "Where names came from")
+        case .hidden: String(localized: "Things people walk past")
+        case .history: String(localized: "What used to be here")
+        case .design: String(localized: "Architecture, art, and signs")
+        case .engineering: String(localized: "How it was built and works")
+        case .people: String(localized: "Who lived or worked here")
+        case .pop: String(localized: "Music, film, TV, books, and games")
+        case .quirk: String(localized: "Odd rules, customs, and records")
+        case .other: ""
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .name: "textformat"
+        case .hidden: "eye"
+        case .history: "clock.arrow.circlepath"
+        case .design: "paintbrush.pointed"
+        case .engineering: "gearshape.2"
+        case .people: "person"
+        case .pop: "film"
+        case .quirk: "sparkle"
+        case .other: "text.quote"
+        }
+    }
+
+    /// Text color for category labels. Every pair passes 4.5:1 on the card and page backgrounds.
+    var color: Color {
+        switch self {
+        case .name: Theme.dynamic(light: 0x1D5FC4, dark: 0x74A7FF)
+        case .hidden: Theme.dynamic(light: 0x08766C, dark: 0x4FD1C0)
+        case .history: Theme.dynamic(light: 0x8A5A1C, dark: 0xE0A65A)
+        case .design: Theme.dynamic(light: 0xB2440E, dark: 0xFF8F5A)
+        case .engineering: Theme.dynamic(light: 0x4B5663, dark: 0xA8B3C0)
+        case .people: Theme.dynamic(light: 0x3F6B12, dark: 0x9BD65A)
+        case .pop: Theme.dynamic(light: 0xC0185F, dark: 0xFF6FA3)
+        case .quirk: Theme.dynamic(light: 0x6E6100, dark: 0xD9C24A)
+        case .other: Theme.dynamic(light: 0x5F6368, dark: 0xB0B4BA)
+        }
+    }
 }
 
 extension Fact.Status {

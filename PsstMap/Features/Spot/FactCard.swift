@@ -5,19 +5,18 @@ import SwiftUI
 struct FactCard: View {
     let fact: Fact
     var number = 1
-    var accent: Color = .primary
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
                 Text(String(format: "%02d", number))
                     .font(.caption.weight(.heavy).monospacedDigit())
-                    .foregroundStyle(accent)
-                Text(fact.category.label)
-                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                Label(fact.category.label, systemImage: fact.category.symbol)
+                    .font(.caption.weight(.bold))
                     .textCase(.uppercase)
                     .tracking(0.8)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(fact.category.color)
                 Spacer(minLength: 0)
                 StatusBadge(status: fact.status)
             }

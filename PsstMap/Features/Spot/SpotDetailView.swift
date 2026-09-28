@@ -189,7 +189,7 @@ struct PlacePage: View {
     private var stories: some View {
         VStack(alignment: .leading, spacing: 32) {
             ForEach(Array(place.spot.facts.enumerated()), id: \.element.id) { index, fact in
-                FactCard(fact: fact, number: index + 1, accent: place.spot.kind.color)
+                FactCard(fact: fact, number: index + 1)
             }
         }
     }
