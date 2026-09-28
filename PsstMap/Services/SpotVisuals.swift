@@ -22,6 +22,7 @@ final class SpotVisuals {
     private var scenes: [String: MKLookAroundScene] = [:]
     private var sceneTasks: [String: Task<MKLookAroundScene?, Never>] = [:]
     private let memory = NSCache<NSString, CachedPicture>()
+    private var inFlight: [String: Task<Picture?, Never>] = [:]
     private let availability: LookAroundAvailability
     private let diskFolder: URL?
 
@@ -84,7 +85,21 @@ final class SpotVisuals {
             update?(cached)
             if cached.source == .lookAround || place.isInMainlandChina || place.spot.size != .small { return cached }
         }
+        // Someone else (usually the launch warm-up) is already making this picture: wait for theirs.
+        if let running = inFlight[key] {
+            let result = await running.value
+            if let result { update?(result) }
+            return result
+        }
+        let task = Task { await generate(for: place, size: size, scale: scale, dark: dark, key: key, update: update) }
+        inFlight[key] = task
+        let result = await task.value
+        inFlight[key] = nil
+        return result
+    }
 
+    private func generate(for place: Place, size: CGSize, scale: CGFloat, dark: Bool, key: String,
+                          update: ((Picture) -> Void)?) async -> Picture? {
         // Look Around faces whatever is nearest the coordinate. For a statue or a doorway that is the thing
         // itself; for a building it is usually a blank wall, so bigger places get the 3D map instead.
         let wantsStreet = (place.spot.size ?? .medium) == .small
