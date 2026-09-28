@@ -1,117 +1,102 @@
 import SwiftUI
 
-/// One fact on a place page: the whisper first, then the whole story and where it comes from.
-/// Everything is visible at once; opening the page is already the "tell me more" step.
+/// One story on a place page. The whisper comes first in full weight, then the rest of the story,
+/// then a single "Sources" menu. Legends and disputes carry their label and a colored rule.
 struct FactCard: View {
     let fact: Fact
+    var number = 1
+    var accent: Color = .primary
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Text(String(format: "%02d", number))
+                    .font(.caption.weight(.heavy).monospacedDigit())
+                    .foregroundStyle(accent)
                 Text(fact.category.label)
                     .font(.caption.weight(.semibold))
                     .textCase(.uppercase)
-                    .tracking(0.6)
+                    .tracking(0.8)
                     .foregroundStyle(.secondary)
                 Spacer(minLength: 0)
                 StatusBadge(status: fact.status)
             }
+            .accessibilityElement(children: .combine)
 
             Text(fact.headline)
-                .font(.title3.weight(.bold))
+                .font(.title2.weight(.bold))
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
 
             Text(fact.short)
-                .font(.body.weight(.medium))
+                .font(.title3)
                 .fixedSize(horizontal: false, vertical: true)
 
             Text(fact.long)
                 .font(.body)
-                .foregroundStyle(.primary.opacity(0.78))
-                .lineSpacing(3)
+                .foregroundStyle(.primary.opacity(0.75))
+                .lineSpacing(4)
                 .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 2)
 
             if fact.status != .fact {
                 Label(fact.status.explanation, systemImage: fact.status.symbol)
                     .font(.footnote.weight(.medium))
                     .foregroundStyle(fact.status.color)
+                    .padding(.top, 2)
             }
 
-            SourcesList(sources: fact.sources)
-                .padding(.top, 2)
+            SourcesMenu(sources: fact.sources)
+                .padding(.top, 4)
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(background)
+        .padding(.leading, fact.status == .fact ? 0 : 14)
         .overlay(alignment: .leading) {
             if fact.status != .fact {
-                UnevenRoundedRectangle(topLeadingRadius: 18, bottomLeadingRadius: 18)
+                Capsule()
                     .fill(fact.status.color)
-                    .frame(width: 4)
-            }
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-    }
-
-    @ViewBuilder
-    private var background: some View {
-        if fact.status == .fact {
-            Theme.cardBackground
-        } else {
-            ZStack {
-                Theme.cardBackground
-                fact.status.color.opacity(0.07)
+                    .frame(width: 3)
             }
         }
     }
 }
 
-/// Compact, tappable source links under a fact.
-struct SourcesList: View {
+/// The sources of a story, folded into one small menu so they don't crowd the reading.
+struct SourcesMenu: View {
     let sources: [Fact.Source]
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(sources.count == 1 ? "Source" : "Sources")
-                .font(.caption.weight(.semibold))
-                .textCase(.uppercase)
-                .tracking(0.6)
-                .foregroundStyle(.secondary)
-                .padding(.bottom, 4)
-            ForEach(Array(sources.enumerated()), id: \.offset) { index, source in
-                if index > 0 {
-                    Divider()
+        Menu {
+            ForEach(Array(sources.enumerated()), id: \.offset) { _, source in
+                Button {
+                    openURL(source.url)
+                } label: {
+                    Text(source.publisher)
+                    Text(source.title)
                 }
-                Link(destination: source.url) {
-                    HStack(alignment: .center, spacing: 10) {
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(source.publisher)
-                                .font(.footnote.weight(.semibold))
-                                .foregroundStyle(.primary)
-                            Text(source.title)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(2)
-                                .multilineTextAlignment(.leading)
-                        }
-                        Spacer(minLength: 0)
-                        Image(systemName: "arrow.up.right")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.tertiary)
-                    }
-                    .padding(.vertical, 8)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("\(source.publisher): \(source.title)")
-                .accessibilityHint(String(localized: "Opens in your browser"))
-                .accessibilityAddTraits(.isLink)
             }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "books.vertical")
+                Text(summary)
+                    .lineLimit(1)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption2.weight(.bold))
+            }
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.primary.opacity(0.06), in: Capsule())
+            .contentShape(Capsule())
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .accessibilityLabel(String(localized: "Sources: \(summary)"))
+        .accessibilityHint(String(localized: "Choose a source to open it"))
+    }
+
+    private var summary: String {
+        let publishers = sources.map(\.publisher)
+        guard let first = publishers.first else { return "" }
+        return publishers.count == 1 ? first : String(localized: "\(first) and \(publishers.count - 1) more")
     }
 }
