@@ -75,7 +75,7 @@ struct FeedCard: View {
         safeArea.bottom + (horizontalSizeClass == .regular ? 32 : 60)
     }
 
-    private var fact: Fact { place.leadFact }
+    private var fact: Fact { app.leadFact(for: place) }
 
     private var text: some View {
         VStack(alignment: .leading, spacing: 8) {

@@ -82,8 +82,8 @@ struct MapScreen: View {
                 carousel = PlaceCarousel.neighborhood(of: place, in: app.visiblePlaces)
             }
         }
-        .onChange(of: app.hiddenKinds) {
-            if let place = selectedPlace, app.hiddenKinds.contains(place.spot.kind) { selectedID = nil }
+        .onChange(of: app.visiblePlaces.count) {
+            if let place = selectedPlace, !app.isVisible(place) { selectedID = nil }
         }
         #if DEBUG
         .onChange(of: selectedID) { _, new in
@@ -137,11 +137,11 @@ struct MapScreen: View {
 
                 if app.isFiltering {
                     Button {
-                        withAnimation(.snappy) { app.showAllKinds() }
+                        withAnimation(.snappy) { app.clearFilters() }
                     } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "line.3.horizontal.decrease")
-                            Text("\(Spot.Kind.allCases.count - app.hiddenKinds.count) of \(Spot.Kind.allCases.count) kinds")
+                            Text(app.filterSummary)
                             Image(systemName: "xmark")
                                 .font(.caption2.weight(.bold))
                                 .foregroundStyle(.secondary)

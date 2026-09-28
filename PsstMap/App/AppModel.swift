@@ -39,12 +39,40 @@ final class AppModel {
         didSet { UserDefaults.standard.set(hiddenKinds.map(\.rawValue), forKey: Self.hiddenKindsKey) }
     }
 
-    /// The places that pass the kind filter.
-    var visiblePlaces: [Place] {
-        hiddenKinds.isEmpty ? catalog.places : catalog.places.filter { !hiddenKinds.contains($0.spot.kind) }
+    /// Story categories the person has hidden. A place stays visible while it has any story left.
+    var hiddenCategories: Set<Fact.Category> = AppModel.loadHiddenCategories() {
+        didSet { UserDefaults.standard.set(hiddenCategories.map(\.rawValue), forKey: Self.hiddenCategoriesKey) }
     }
 
-    var isFiltering: Bool { !hiddenKinds.isEmpty }
+    /// The places that pass both filters.
+    var visiblePlaces: [Place] {
+        guard isFiltering else { return catalog.places }
+        return catalog.places.filter(isVisible)
+    }
+
+    func isVisible(_ place: Place) -> Bool {
+        !hiddenKinds.contains(place.spot.kind)
+            && place.spot.facts.contains { !hiddenCategories.contains($0.category) }
+    }
+
+    /// The story to lead with: the first one in a category that isn't hidden.
+    func leadFact(for place: Place) -> Fact {
+        place.spot.facts.first { !hiddenCategories.contains($0.category) } ?? place.leadFact
+    }
+
+    var isFiltering: Bool { !hiddenKinds.isEmpty || !hiddenCategories.isEmpty }
+
+    func toggle(_ category: Fact.Category) {
+        if hiddenCategories.contains(category) {
+            hiddenCategories.remove(category)
+        } else if hiddenCategories.count < Fact.Category.allCases.count - 1 {
+            hiddenCategories.insert(category)
+        }
+    }
+
+    func showOnly(_ category: Fact.Category) {
+        hiddenCategories = Set(Fact.Category.allCases).subtracting([category])
+    }
 
     func toggle(_ kind: Spot.Kind) {
         if hiddenKinds.contains(kind) {
@@ -63,7 +91,33 @@ final class AppModel {
         hiddenKinds = []
     }
 
+    func clearFilters() {
+        hiddenKinds = []
+        hiddenCategories = []
+    }
+
+    /// A few words saying what the filter is doing, for the chip on the map.
+    var filterSummary: String {
+        switch (hiddenKinds.isEmpty, hiddenCategories.isEmpty) {
+        case (false, true):
+            String(localized: "\(Spot.Kind.allCases.count - hiddenKinds.count) of \(Spot.Kind.allCases.count) kinds")
+        case (true, false):
+            hiddenCategories.count == Fact.Category.allCases.count - 1
+                ? (Set(Fact.Category.allCases).subtracting(hiddenCategories).first?.label ?? "")
+                : String(localized: "\(Fact.Category.allCases.count - hiddenCategories.count) of \(Fact.Category.allCases.count) stories")
+        default:
+            String(localized: "Filtered")
+        }
+    }
+
     private static let hiddenKindsKey = "filter.hiddenKinds"
+
+    private static let hiddenCategoriesKey = "filter.hiddenCategories"
+
+    private static func loadHiddenCategories() -> Set<Fact.Category> {
+        let raw = UserDefaults.standard.stringArray(forKey: hiddenCategoriesKey) ?? []
+        return Set(raw.compactMap(Fact.Category.init(rawValue:)))
+    }
 
     private static func loadHiddenKinds() -> Set<Spot.Kind> {
         let raw = UserDefaults.standard.stringArray(forKey: hiddenKindsKey) ?? []

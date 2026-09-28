@@ -75,6 +75,7 @@ struct PlaceCarousel: View {
 private struct PlaceMiniCard: View {
     let place: Place
     let onClose: () -> Void
+    @Environment(AppModel.self) private var app
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -88,7 +89,7 @@ private struct PlaceMiniCard: View {
                 .font(.headline)
                 .foregroundStyle(.white)
                 .lineLimit(1)
-            Text(place.leadFact.short)
+            Text(app.leadFact(for: place).short)
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.88))
                 .lineLimit(2)

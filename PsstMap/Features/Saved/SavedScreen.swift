@@ -101,6 +101,7 @@ struct SavedScreen: View {
 
 private struct SavedRow: View {
     let place: Place
+    @Environment(AppModel.self) private var app
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
@@ -108,7 +109,7 @@ private struct SavedRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(place.name)
                     .font(.body.weight(.semibold))
-                Text(place.leadFact.headline)
+                Text(app.leadFact(for: place).headline)
                     .font(.subheadline)
                     .foregroundStyle(.primary.opacity(0.8))
                 Text("\(place.areaName), \(place.city)")

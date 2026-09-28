@@ -67,7 +67,7 @@ struct FeedScreen: View {
         .onAppear { if items.isEmpty { rebuild() } }
         .onChange(of: app.catalog.places.count) { rebuild() }
         .onChange(of: scope) { rebuild() }
-        .onChange(of: app.hiddenKinds) { rebuild() }
+        .onChange(of: app.visiblePlaces.count) { rebuild() }
         .onChange(of: currentID) { _, id in handlePageChange(to: id) }
         .sensoryFeedback(.selection, trigger: currentID)
     }
@@ -149,7 +149,7 @@ struct FeedScreen: View {
         case .city(let name): app.catalog.places(inCity: name)
         case .area(let id): app.catalog.places(inArea: id)
         }
-        return places.filter { !app.hiddenKinds.contains($0.spot.kind) }
+        return places.filter(app.isVisible)
     }
 
     private func rebuild() {
