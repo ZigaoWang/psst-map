@@ -7,7 +7,7 @@ final class FeedOrderTests: XCTestCase {
             let list = (0..<spots).map { index in
                 Spot(id: "s\(index)", name: "Spot \(index)", localName: nil, kind: .building, size: nil,
                      coordinate: .init(latitude: 51.5, longitude: -0.1),
-                     coordinateSource: .init(type: .osm, id: "node/\(index + 1)"),
+                     coordinateSource: .init(type: "osm", id: "node/\(index + 1)"),
                      facts: [Fact(id: "f", category: .history, status: .fact, headline: "h", short: "s", long: "l",
                                   sources: [])])
             }

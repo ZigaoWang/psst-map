@@ -43,6 +43,7 @@ extension Spot.Kind {
         case .green: UIColor(hex: 0x00783A)
         case .water: UIColor(hex: 0x00838C)
         case .culture: UIColor(hex: 0xC4005F)
+        case .other: UIColor(hex: 0x5F6368)
         }
     }
 
@@ -63,6 +64,7 @@ extension Spot.Kind {
         case .green: "tree.fill"
         case .water: "drop.fill"
         case .culture: "theatermasks.fill"
+        case .other: "mappin"
         }
     }
 
@@ -77,6 +79,7 @@ extension Spot.Kind {
         case .green: String(localized: "Park or garden")
         case .water: String(localized: "Water")
         case .culture: String(localized: "Culture")
+        case .other: String(localized: "Place")
         }
     }
 
@@ -91,6 +94,7 @@ extension Spot.Kind {
         case .green: String(localized: "Parks, gardens, and squares")
         case .water: String(localized: "Docks, rivers, canals, and fountains")
         case .culture: String(localized: "Museums, theaters, and markets")
+        case .other: String(localized: "Other places")
         }
     }
 }
@@ -104,7 +108,9 @@ extension Fact.Category {
         case .design: String(localized: "Design")
         case .engineering: String(localized: "Engineering")
         case .people: String(localized: "People")
+        case .pop: String(localized: "Pop culture")
         case .quirk: String(localized: "Quirk")
+        case .other: String(localized: "Story")
         }
     }
 }

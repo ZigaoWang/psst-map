@@ -228,7 +228,7 @@ struct PlacePage: View {
         VStack(alignment: .leading, spacing: 6) {
             if let url = place.spot.coordinateSource.url {
                 Link(destination: url) {
-                    Text(place.spot.coordinateSource.type == .wikidata
+                    Text(place.spot.coordinateSource.isWikidata
                          ? "Location from Wikidata"
                          : "Location from OpenStreetMap contributors")
                         .underline()
