@@ -31,7 +31,7 @@ final class SpotVisuals {
         availability = LookAroundAvailability()
         memory.countLimit = 24
         let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
-        diskFolder = caches?.appendingPathComponent("visuals-v1", isDirectory: true)
+        diskFolder = caches?.appendingPathComponent("visuals-v2", isDirectory: true)
         if let diskFolder {
             try? FileManager.default.createDirectory(at: diskFolder, withIntermediateDirectories: true)
         }
@@ -142,18 +142,57 @@ final class SpotVisuals {
     private func mapPicture(for place: Place, size: CGSize, scale: CGFloat, dark: Bool) async -> Picture? {
         let options = MKMapSnapshotter.Options()
         options.camera = MapFraming.camera(for: place)
-        options.preferredConfiguration = MKHybridMapConfiguration(elevationStyle: .realistic)
+        options.preferredConfiguration = MapFraming.shows3D(place)
+            ? MKHybridMapConfiguration(elevationStyle: .realistic)
+            : MKStandardMapConfiguration(elevationStyle: .flat, emphasisStyle: .muted)
         options.pointOfInterestFilter = .excludingAll
         options.size = size
         options.traitCollection = Self.traits(scale: scale, dark: dark)
         do {
             let snapshot = try await MKMapSnapshotter(options: options).start()
             let point = snapshot.point(for: place.mapCoordinate)
-            let image = Self.drawMarker(on: snapshot.image, at: point, kind: place.spot.kind)
+            let image = MapFraming.shows3D(place)
+                ? Self.drawMarker(on: snapshot.image, at: point, kind: place.spot.kind)
+                : Self.drawPin(on: snapshot.image, at: point, kind: place.spot.kind)
             return Picture(image: image, source: .map)
         } catch {
             logger.info("Map snapshot failed for \(place.id, privacy: .public): \(error.localizedDescription, privacy: .public)")
             return nil
+        }
+    }
+
+    /// On a flat map the place gets a proper pin with its icon, so it reads at a glance.
+    private static func drawPin(on image: UIImage, at point: CGPoint, kind: Spot.Kind) -> UIImage {
+        let bounds = CGRect(origin: .zero, size: image.size)
+        guard bounds.insetBy(dx: -20, dy: -20).contains(point) else { return image }
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = image.scale
+        return UIGraphicsImageRenderer(size: image.size, format: format).image { context in
+            image.draw(at: .zero)
+            let cg = context.cgContext
+            let diameter: CGFloat = 40
+            let circle = CGRect(x: point.x - diameter / 2, y: point.y - diameter - 8, width: diameter, height: diameter)
+            cg.setShadow(offset: CGSize(width: 0, height: 2), blur: 8, color: UIColor.black.withAlphaComponent(0.35).cgColor)
+            // Stem pointing at the exact spot.
+            let stem = UIBezierPath()
+            stem.move(to: CGPoint(x: point.x - 7, y: circle.maxY - 3))
+            stem.addLine(to: CGPoint(x: point.x + 7, y: circle.maxY - 3))
+            stem.addLine(to: CGPoint(x: point.x, y: point.y))
+            stem.close()
+            UIColor.white.setFill()
+            stem.fill()
+            cg.fillEllipse(in: circle)
+            cg.setShadow(offset: .zero, blur: 0, color: nil)
+            kind.uiColor.setFill()
+            cg.fillEllipse(in: circle.insetBy(dx: 3, dy: 3))
+            let symbolConfig = UIImage.SymbolConfiguration(pointSize: 15, weight: .semibold)
+            if let symbol = UIImage(systemName: kind.symbol, withConfiguration: symbolConfig)?
+                .withTintColor(kind.onUIColor, renderingMode: .alwaysOriginal) {
+                let origin = CGPoint(x: circle.midX - symbol.size.width / 2, y: circle.midY - symbol.size.height / 2)
+                symbol.draw(at: origin)
+            }
+            UIColor.white.setFill()
+            cg.fillEllipse(in: CGRect(x: point.x - 2.5, y: point.y - 2.5, width: 5, height: 5))
         }
     }
 
@@ -257,23 +296,39 @@ private final class LookAroundAvailability {
 
 /// Camera choices shared by the snapshotter and the live 3D view.
 enum MapFraming {
+    /// Countries where Apple Maps has realistic 3D buildings for city centers. Elsewhere (Shanghai and
+    /// Kuala Lumpur today) a tilted view is just stretched satellite imagery, so a flat map reads better.
+    private static let countriesWith3D: Set<String> = ["GB", "US", "CA", "FR", "DE", "ES", "IT", "NL", "IE", "JP", "AU"]
+
+    static func shows3D(_ place: Place) -> Bool {
+        countriesWith3D.contains(place.countryCode) && (place.spot.size ?? .medium) != .small
+    }
+
     static func distance(for place: Place) -> CLLocationDistance {
+        if shows3D(place) {
+            // Close enough that MapKit allows a steep tilt, far enough to show the whole thing.
+            return (place.spot.size ?? .medium) == .large ? 820 : 430
+        }
         switch place.spot.size ?? .medium {
-        case .small: 260
-        case .medium: 480
-        case .large: 1_150
+        case .small: return 420
+        case .medium: return 600
+        case .large: return 1_100
         }
     }
 
+    static func pitch(for place: Place) -> CGFloat { shows3D(place) ? 60 : 0 }
+
     /// A heading that is stable per place, so the same place always looks the same but neighbors vary.
+    /// Flat maps stay north-up, which is what people expect from a map.
     static func heading(for place: Place) -> CLLocationDirection {
+        guard shows3D(place) else { return 0 }
         let sum = place.id.unicodeScalars.reduce(UInt32(7)) { ($0 &* 31) &+ $1.value }
         return CLLocationDirection(sum % 360)
     }
 
     static func camera(for place: Place) -> MKMapCamera {
-        MKMapCamera(lookingAtCenter: place.mapCoordinate, fromDistance: distance(for: place), pitch: 60,
-                    heading: heading(for: place))
+        MKMapCamera(lookingAtCenter: place.mapCoordinate, fromDistance: distance(for: place),
+                    pitch: pitch(for: place), heading: heading(for: place))
     }
 }
 

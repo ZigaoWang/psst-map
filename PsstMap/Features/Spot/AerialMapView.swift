@@ -10,20 +10,28 @@ struct AerialMapView: View {
 
     var body: some View {
         Map(position: $position, interactionModes: [.pan, .zoom, .rotate, .pitch]) {
-            Annotation(place.name, coordinate: place.mapCoordinate, anchor: .center) {
-                Circle()
-                    .fill(place.spot.kind.color)
-                    .frame(width: 14, height: 14)
-                    .overlay(Circle().stroke(.white, lineWidth: 3))
-                    .shadow(radius: 3)
+            if MapFraming.shows3D(place) {
+                Annotation(place.name, coordinate: place.mapCoordinate, anchor: .center) {
+                    Circle()
+                        .fill(place.spot.kind.color)
+                        .frame(width: 14, height: 14)
+                        .overlay(Circle().stroke(.white, lineWidth: 3))
+                        .shadow(radius: 3)
+                }
+                .annotationTitles(.hidden)
+            } else {
+                Marker(place.name, systemImage: place.spot.kind.symbol, coordinate: place.mapCoordinate)
+                    .tint(place.spot.kind.color)
             }
-            .annotationTitles(.hidden)
         }
-        .mapStyle(.hybrid(elevation: .realistic, pointsOfInterest: .excludingAll))
+        .mapStyle(MapFraming.shows3D(place)
+                  ? .hybrid(elevation: .realistic, pointsOfInterest: .excludingAll)
+                  : .standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll))
         .mapControls { }
         .onAppear { position = .camera(camera(heading: MapFraming.heading(for: place))) }
         .task(id: place.id) {
-            guard animated else { return }
+            // Orbiting only makes sense in 3D; a flat map stays still and north-up.
+            guard animated, MapFraming.shows3D(place) else { return }
             // A slow orbit gives the still map some life, like footage of the place.
             var heading = MapFraming.heading(for: place)
             try? await Task.sleep(for: .seconds(0.8))
@@ -41,8 +49,8 @@ struct AerialMapView: View {
     }
 
     private func camera(heading: Double) -> MapCamera {
-        MapCamera(centerCoordinate: place.mapCoordinate, distance: MapFraming.distance(for: place) * 1.4,
-                  heading: heading, pitch: 60)
+        MapCamera(centerCoordinate: place.mapCoordinate, distance: MapFraming.distance(for: place),
+                  heading: heading, pitch: MapFraming.pitch(for: place))
     }
 }
 
@@ -61,7 +69,7 @@ struct AerialMapScreen: View {
                         Text(place.name)
                             .font(.headline)
                             .lineLimit(2)
-                        Text("3D map. Drag to look around.")
+                        Text(MapFraming.shows3D(place) ? "3D map. Drag to look around." : "Drag and pinch to explore.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }

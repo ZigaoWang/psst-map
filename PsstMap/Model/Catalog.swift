@@ -9,6 +9,7 @@ nonisolated struct Place: Hashable, Identifiable, Sendable {
     let areaID: String
     let areaName: String
     let city: String
+    let countryCode: String
 
     /// WGS-84, as stored in the content. Use it for distance math against Core Location.
     let coordinate: CLLocationCoordinate2D
@@ -22,6 +23,7 @@ nonisolated struct Place: Hashable, Identifiable, Sendable {
         self.areaID = area.id
         self.areaName = area.name
         self.city = area.city
+        self.countryCode = area.countryCode
         let wgs = CLLocationCoordinate2D(latitude: spot.coordinate.latitude, longitude: spot.coordinate.longitude)
         self.coordinate = wgs
     }
