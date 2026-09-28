@@ -135,7 +135,7 @@ struct PlaceMapView: UIViewRepresentable {
                 let span = 700 * MKMapPointsPerMeterAtLatitude(annotation.coordinate.latitude)
                 let rect = MKMapRect(x: point.x - span / 2, y: point.y - span / 2, width: span, height: span)
                 // Keep the pin above the half-height sheet that opens with it.
-                let bottom = map.bounds.height * 0.45
+                let bottom = map.bounds.height * 0.62
                 map.setVisibleMapRect(rect, edgePadding: UIEdgeInsets(top: 80, left: 20, bottom: bottom, right: 20),
                                       animated: true)
                 DispatchQueue.main.async { [weak self] in self?.parent.selectedID = id }
