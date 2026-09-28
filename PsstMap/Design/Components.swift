@@ -121,7 +121,12 @@ extension View {
     @ViewBuilder
     func floatingSurface<S: Shape>(in shape: S) -> some View {
         if #available(iOS 26.0, *) {
-            self.glassEffect(.regular, in: shape)
+            // Glass applied to a button's own label swallows its taps, so draw it as a layer behind instead.
+            self.background {
+                Color.clear
+                    .glassEffect(.regular, in: shape)
+                    .allowsHitTesting(false)
+            }
         } else {
             self.background(.regularMaterial, in: shape)
                 .overlay(shape.stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
