@@ -12,15 +12,13 @@ xcodegen generate              # the Xcode project is generated, not committed
 open PsstMap.xcodeproj
 ```
 
-Put the area files in `Content/areas/` before building (see "Content" below). Without them the app builds and runs, but shows its "couldn't load places" screen, and the content tests skip.
+Put the area files in `Content/areas/` before building: from a checkout of `psst-content` next to this one, run `python3 scripts/publish.py` there. Without them the app builds and runs, but shows its "couldn't load places" screen, and the content tests skip.
 
 Run the `PsstMap` scheme. Tests: `xcodebuild test -project PsstMap.xcodeproj -scheme PsstMap -destination 'platform=iOS Simulator,name=iPhone 17 Pro'`.
 
 ## How it's put together
 
-- `Content/areas/`: where the area files go at build time. They are bundled into the app; there is no server. The files themselves are not in this repository (see "Content" below).
-- `CONTENT_GUIDE.md`: the file format, the research rules, and the checklist for writing area files.
-- `scripts/validate_content.py`: checks area files. Run it on every new or changed file; `--online` also re-checks every coordinate against Wikidata or OpenStreetMap.
+- `Content/areas/`: where the area files go at build time. They are bundled into the app; there is no server. The files themselves live in the `psst-content` repository (see "Content" below).
 - `PsstMap/Model`: the decoded content (`Area`, `Spot`, `Fact`) and the `Catalog` the app browses.
 - `PsstMap/Services`: content loading, saved places, feed history, location, pictures (`SpotVisuals`), and China map handling (`ChinaCoordinates`, `MapDatum`).
 - `PsstMap/Features`: the map, the feed, the place detail, saved places, about, and the welcome screen.
@@ -46,4 +44,4 @@ Notifications about nearby places aren't built yet. When they are, `Catalog.plac
 
 ## Content
 
-The places and facts are a separate work from the app, with their own scope and license, so this repository holds only the app, its tooling, and the content format. Area files are kept and versioned elsewhere and copied into `Content/areas/` (which git ignores) before a build. The app reads whatever files are there, so shipping new content means dropping in new files and rebuilding; no code changes.
+The places and facts are a separate work with their own scope and license, kept in the `psst-content` repository: the area files, the content guide (format, research rules, checklist), the validator, and the research tools. `python3 scripts/publish.py` there validates everything and syncs it into this repository's `Content/areas/`, which git ignores. The app reads whatever files are there, so new content needs no code changes. The format's rules for compatibility (unknown categories and kinds, broken entries) are described in `PsstMap/Model/Content.swift`.
