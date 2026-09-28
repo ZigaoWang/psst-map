@@ -55,6 +55,7 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/PsstMap.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PsstMap"
         BUNDLE_LOADER: "$(TEST_HOST)"
+        SWIFT_DEFAULT_ACTOR_ISOLATION: nonisolated
   PsstMapUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -67,6 +68,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: app.psstmap.ios.uitests
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: PsstMap
+        SWIFT_DEFAULT_ACTOR_ISOLATION: nonisolated
 schemes:
   PsstMap:
     build:

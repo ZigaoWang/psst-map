@@ -2,11 +2,9 @@ import XCTest
 
 /// Launches the app and walks through the main screens.
 final class SmokeTests: XCTestCase {
-    override func setUp() {
-        continueAfterFailure = false
-    }
-
+    @MainActor
     func testFirstLaunchShowsWelcomeThenTabs() {
+        continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["-onboarding.completed", "NO"]
         app.launch()
@@ -16,6 +14,7 @@ final class SmokeTests: XCTestCase {
         XCTAssertTrue(app.buttons["Map"].waitForExistence(timeout: 10))
     }
 
+    @MainActor
     func testTabsAndFeedOpenDetail() {
         let app = XCUIApplication()
         app.launchArguments = ["-onboarding.completed", "YES"]
