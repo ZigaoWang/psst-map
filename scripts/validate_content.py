@@ -407,6 +407,21 @@ def validate_spot(report: Report, area_id: str, bounds: dict | None, spot: objec
     }
 
 
+BROAD_NAME_RE = re.compile(r"\b(district|quarter|neighbou?rhood|area|precinct|estate|concession|old town|downtown)\b", re.I)
+
+
+def check_granularity(report: Report, area_name: str, spots: list[dict]) -> None:
+    """A spot is one physical thing with its own pin, never a whole area."""
+    for spot in spots:
+        name = spot["name"]
+        if not name:
+            continue
+        if name.lower() == area_name.lower() or name.lower() in area_name.lower().split(" and "):
+            report.error(spot["where"], f"spot '{name}' is the area itself; pin specific places instead")
+        elif BROAD_NAME_RE.search(name):
+            report.warn(spot["where"], f"'{name}' sounds like an area, not one physical thing; is it too broad?")
+
+
 def validate_area(report: Report, path: Path) -> list[dict]:
     where = path.name
     try:
@@ -488,6 +503,8 @@ def validate_area(report: Report, path: Path) -> list[dict]:
         result = validate_spot(report, area_id, valid_bounds, spot, spot_ids, spot_names)
         if result:
             results.append(result)
+    if isinstance(data.get("name"), str):
+        check_granularity(report, data["name"], results)
     return results
 
 
