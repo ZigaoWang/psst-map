@@ -121,7 +121,7 @@ extension View {
     @ViewBuilder
     func floatingSurface<S: Shape>(in shape: S) -> some View {
         if #available(iOS 26.0, *) {
-            self.glassEffect(.regular.interactive(), in: shape)
+            self.glassEffect(.regular, in: shape)
         } else {
             self.background(.regularMaterial, in: shape)
                 .overlay(shape.stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
