@@ -11,18 +11,15 @@ struct MapScreen: View {
     @State private var regionRequest: PlaceMapView.RegionRequest?
     @State private var isLocating = false
     @State private var locationProblem: LocationProblem?
-    @State private var detent: PresentationDetent = .medium
+    @State private var detailPlace: Place?
 
     enum LocationProblem: Identifiable {
         case denied, unavailable, nothingNearby
         var id: Self { self }
     }
 
-    private var selectedPlace: Binding<Place?> {
-        Binding(
-            get: { selectedID.flatMap { app.catalog.place(id: $0) } },
-            set: { selectedID = $0?.id }
-        )
+    private var selectedPlace: Place? {
+        selectedID.flatMap { app.catalog.place(id: $0) }
     }
 
     var body: some View {
@@ -38,11 +35,18 @@ struct MapScreen: View {
         )
         .ignoresSafeArea()
         .overlay(alignment: .top) { topBar }
-        .sheet(item: selectedPlace) { place in
-            SpotDetailView(place: place, showsMapButton: false, onClose: { selectedID = nil })
-                .presentationDetents([.medium, .large], selection: $detent)
-                .presentationBackgroundInteraction(.enabled(upThrough: .medium))
-                .presentationContentInteraction(.scrolls)
+        .overlay(alignment: .bottom) {
+            if let place = selectedPlace {
+                PlacePreviewCard(place: place, onOpen: { detailPlace = place }, onClose: { selectedID = nil })
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 10)
+                    .frame(maxWidth: 560)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(duration: 0.4, bounce: 0.18), value: selectedID == nil)
+        .sheet(item: $detailPlace) { place in
+            SpotDetailView(place: place, showsMapButton: false)
                 .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showsAreas) {
@@ -65,12 +69,11 @@ struct MapScreen: View {
             }
         }
         #endif
-        .onChange(of: selectedID) { old, new in
-            if old == nil, new != nil { detent = .medium }
-            #if DEBUG
-            if new != nil, UserDefaults.standard.string(forKey: "debug.detent") == "large" { detent = .large }
-            #endif
+        #if DEBUG
+        .onChange(of: selectedID) { _, new in
+            if let new, UserDefaults.standard.bool(forKey: "debug.detail") { detailPlace = app.catalog.place(id: new) }
         }
+        #endif
         .alert(item: $locationProblem) { problem in
             switch problem {
             case .denied:

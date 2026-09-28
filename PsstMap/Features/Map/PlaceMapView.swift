@@ -134,10 +134,8 @@ struct PlaceMapView: UIViewRepresentable {
                 let point = MKMapPoint(annotation.coordinate)
                 let span = 700 * MKMapPointsPerMeterAtLatitude(annotation.coordinate.latitude)
                 let rect = MKMapRect(x: point.x - span / 2, y: point.y - span / 2, width: span, height: span)
-                // Keep the pin above the half-height sheet that opens with it.
-                // Before the first layout the map has no size yet, so fall back to the window's.
-                let height = map.bounds.height > 0 ? map.bounds.height : (map.window?.bounds.height ?? UIScreen.main.bounds.height)
-                let bottom = height * 0.62
+                // Keep the pin clear of the place card that slides up with it.
+                let bottom: CGFloat = 230
                 map.setVisibleMapRect(rect, edgePadding: UIEdgeInsets(top: 80, left: 20, bottom: bottom, right: 20),
                                       animated: true)
                 DispatchQueue.main.async { [weak self] in self?.parent.selectedID = id }
