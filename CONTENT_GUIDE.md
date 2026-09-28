@@ -112,6 +112,7 @@ Coordinates must come from a real source. Never estimate from memory, from a map
    ```
    To search by name near an area: `[out:json];nwr["name"~"Cutty Sark"](51.47,-0.02,51.49,0.0);out center;`
    Overpass is shared and rate limited. If you get a 429 or 504, wait a few seconds and retry, and batch lookups where you can (`(way(1);way(2);node(3););out center;`).
+   If Overpass is down, the main OSM API works for single elements: `https://api.openstreetmap.org/api/0.6/node/123.json` for a node, or `.../way/123/full.json` for a way, where the coordinate to use is the middle of the bounding box of its nodes (that is exactly what Overpass `out center` returns). If the Wikidata API answers 429, the query service at `https://query.wikidata.org/sparql` is limited separately. The validator falls back to both automatically.
 3. **Check the precision.** Some Wikidata coordinates are rounded to 3 decimal places or fewer, which can be 100 meters out. If a Wikidata coordinate has fewer than 4 decimal places, use the OSM element instead.
 4. **Check it makes sense.** The Wikidata point for a large thing (a park, a long bridge) is sometimes far from where people stand. If the Wikidata point is clearly wrong for what the spot describes, use the OSM element instead. If neither source has the spot, leave the spot out.
 
