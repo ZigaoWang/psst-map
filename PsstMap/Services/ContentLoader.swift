@@ -2,7 +2,7 @@ import Foundation
 import OSLog
 
 /// Loads the bundled area files. A broken file is skipped and logged rather than taking the app down;
-/// `scripts/validate_content.py` and the unit tests are there to stop that from ever shipping.
+/// The validator in psst-content and the unit tests are there to stop that from ever shipping.
 nonisolated enum ContentLoader {
     static let supportedSchemaVersion = 1
     private static let logger = Logger(subsystem: "app.psstmap", category: "content")
