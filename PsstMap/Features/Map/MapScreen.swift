@@ -24,7 +24,7 @@ struct MapScreen: View {
 
     var body: some View {
         PlaceMapView(
-            places: app.catalog.places,
+            places: app.visiblePlaces,
             selectedID: $selectedID,
             focus: app.mapFocus,
             areaBounds: { app.catalog.area(id: $0)?.bounds },
@@ -69,6 +69,9 @@ struct MapScreen: View {
             }
         }
         #endif
+        .onChange(of: app.hiddenKinds) {
+            if let place = selectedPlace, app.hiddenKinds.contains(place.spot.kind) { selectedID = nil }
+        }
         #if DEBUG
         .onChange(of: selectedID) { _, new in
             if let new, UserDefaults.standard.bool(forKey: "debug.detail") { detailPlace = app.catalog.place(id: new) }
@@ -98,25 +101,47 @@ struct MapScreen: View {
 
     private var topBar: some View {
         HStack(alignment: .top, spacing: 10) {
-            Button {
-                showsAreas = true
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "square.stack.3d.up.fill")
-                        .imageScale(.medium)
-                    Text(visibleAreaName ?? String(localized: "Choose an area"))
-                        .font(.subheadline.weight(.semibold))
-                        .lineLimit(1)
-                    Image(systemName: "chevron.down")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 8) {
+                Button {
+                    showsAreas = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "square.stack.3d.up.fill")
+                            .imageScale(.medium)
+                        Text(visibleAreaName ?? String(localized: "Choose an area"))
+                            .font(.subheadline.weight(.semibold))
+                            .lineLimit(1)
+                        Image(systemName: "chevron.down")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.secondary)
+                    }
+                    .foregroundStyle(.primary)
+                    .frame(minHeight: 28)
                 }
-                .foregroundStyle(.primary)
-                .frame(minHeight: 28)
+                .floatingButtonStyle()
+                .accessibilityLabel(visibleAreaName.map { String(localized: "Area: \($0)") } ?? String(localized: "Choose an area"))
+                .accessibilityHint(String(localized: "Shows all areas"))
+
+                if app.isFiltering {
+                    Button {
+                        withAnimation(.snappy) { app.showAllKinds() }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "line.3.horizontal.decrease")
+                            Text("\(Spot.Kind.allCases.count - app.hiddenKinds.count) of \(Spot.Kind.allCases.count) kinds")
+                            Image(systemName: "xmark")
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(.secondary)
+                        }
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.primary)
+                    }
+                    .floatingButtonStyle()
+                    .transition(.scale(scale: 0.8, anchor: .topLeading).combined(with: .opacity))
+                    .accessibilityLabel(String(localized: "Filter on"))
+                    .accessibilityHint(String(localized: "Shows every kind of place again"))
+                }
             }
-            .floatingButtonStyle()
-            .accessibilityLabel(visibleAreaName.map { String(localized: "Area: \($0)") } ?? String(localized: "Choose an area"))
-            .accessibilityHint(String(localized: "Shows all areas"))
 
             Spacer(minLength: 0)
 
@@ -134,7 +159,8 @@ struct MapScreen: View {
                 .floatingButtonStyle(circle: true)
                 .accessibilityLabel(String(localized: "Show my location"))
                 Button { showsKey = true } label: {
-                    Image(systemName: "list.bullet.rectangle")
+                    Image(systemName: app.isFiltering ? "line.3.horizontal.decrease.circle.fill" : "list.bullet.rectangle")
+                        .contentTransition(.symbolEffect(.replace))
                         .frame(width: 24, height: 24)
                 }
                 .floatingButtonStyle(circle: true)

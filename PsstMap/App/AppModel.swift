@@ -32,6 +32,42 @@ final class AppModel {
     /// Shuffles the feed once per session, so it stays put while you scroll and can be warmed up early.
     var feedSeed = UInt64.random(in: 0...UInt64.max)
 
+    /// Kinds of place the person has hidden with the map key. Applies to the map and the feed.
+    var hiddenKinds: Set<Spot.Kind> = AppModel.loadHiddenKinds() {
+        didSet { UserDefaults.standard.set(hiddenKinds.map(\.rawValue), forKey: Self.hiddenKindsKey) }
+    }
+
+    /// The places that pass the kind filter.
+    var visiblePlaces: [Place] {
+        hiddenKinds.isEmpty ? catalog.places : catalog.places.filter { !hiddenKinds.contains($0.spot.kind) }
+    }
+
+    var isFiltering: Bool { !hiddenKinds.isEmpty }
+
+    func toggle(_ kind: Spot.Kind) {
+        if hiddenKinds.contains(kind) {
+            hiddenKinds.remove(kind)
+        } else if hiddenKinds.count < Spot.Kind.allCases.count - 1 {
+            // Hiding the last visible kind would leave an empty map, so that tap does nothing.
+            hiddenKinds.insert(kind)
+        }
+    }
+
+    func showOnly(_ kind: Spot.Kind) {
+        hiddenKinds = Set(Spot.Kind.allCases).subtracting([kind])
+    }
+
+    func showAllKinds() {
+        hiddenKinds = []
+    }
+
+    private static let hiddenKindsKey = "filter.hiddenKinds"
+
+    private static func loadHiddenKinds() -> Set<Spot.Kind> {
+        let raw = UserDefaults.standard.stringArray(forKey: hiddenKindsKey) ?? []
+        return Set(raw.compactMap(Spot.Kind.init(rawValue:)))
+    }
+
     let saved = SavedStore()
     let seen = SeenStore()
     let location = LocationService()
