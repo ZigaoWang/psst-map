@@ -253,7 +253,7 @@ struct PlacePage: View {
     }
 }
 
-private struct ScrollOffsetKey: PreferenceKey {
+nonisolated private struct ScrollOffsetKey: PreferenceKey {
     static let defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }

@@ -5,9 +5,7 @@ import UIKit
 /// badge says whether it is a legend or disputed. Everything else stays neutral.
 enum Theme {
     static func dynamic(light: UInt32, dark: UInt32) -> Color {
-        Color(UIColor { traits in
-            UIColor(hex: traits.userInterfaceStyle == .dark ? dark : light)
-        })
+        Color(UIColor.dynamic(light: light, dark: dark))
     }
 
     /// Warm off-white paper and deep ink, used for brand moments (welcome, empty states).
@@ -22,7 +20,15 @@ enum Theme {
 }
 
 extension UIColor {
-    convenience init(hex: UInt32, alpha: CGFloat = 1) {
+    /// A color that follows light and dark mode. The provider is nonisolated because SwiftUI and MapKit
+    /// resolve colors on their own rendering threads; a main-actor closure here traps at runtime.
+    nonisolated static func dynamic(light: UInt32, dark: UInt32) -> UIColor {
+        UIColor { @Sendable traits in
+            UIColor(hex: traits.userInterfaceStyle == .dark ? dark : light)
+        }
+    }
+
+    nonisolated convenience init(hex: UInt32, alpha: CGFloat = 1) {
         self.init(red: CGFloat((hex >> 16) & 0xFF) / 255,
                   green: CGFloat((hex >> 8) & 0xFF) / 255,
                   blue: CGFloat(hex & 0xFF) / 255,

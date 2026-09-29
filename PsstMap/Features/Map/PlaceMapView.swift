@@ -274,8 +274,8 @@ final class PlaceClusterView: MKMarkerAnnotationView {
         collisionMode = .circle
         titleVisibility = .hidden
         subtitleVisibility = .hidden
-        markerTintColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: 0xECEBE6) : UIColor(hex: 0x10182B) }
-        glyphTintColor = UIColor { $0.userInterfaceStyle == .dark ? UIColor(hex: 0x10182B) : .white }
+        markerTintColor = UIColor.dynamic(light: 0x10182B, dark: 0xECEBE6)
+        glyphTintColor = UIColor.dynamic(light: 0xFFFFFF, dark: 0x10182B)
         configure()
     }
 
