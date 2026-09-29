@@ -1,0 +1,4 @@
+module CH3 {
+    header "h3api.h"
+    export *
+}

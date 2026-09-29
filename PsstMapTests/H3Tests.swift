@@ -1,5 +1,5 @@
 import XCTest
-@testable import H3
+@testable import PsstMap
 
 /// Cell ids must match the server's (Python h3 4.5.0) exactly. These were generated with it.
 final class H3Tests: XCTestCase {

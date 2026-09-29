@@ -23,6 +23,7 @@ Run the `PsstMap` scheme. Tests: `xcodebuild test -project PsstMap.xcodeproj -sc
 - `PsstMap/Services`: loading and updating content (`ContentLibrary`, `ContentUpdater`), search (`SearchIndex`), story translation, problem reports, saved places, feed history, location, pictures (`SpotVisuals`), and China map handling (`ChinaCoordinates`, `MapDatum`).
 - `PsstMap/Features`: the map, search, the feed, the place detail, threads (tags), saved places, settings, and the welcome screen.
 - `PsstMap/Design`: colors, badges, and shared components.
+- `Vendor/H3`: Uber's H3 library, compiled into the app, so it computes the same map cells as the server.
 - `PsstMap/Resources`: assets, the String Catalogs (`Localizable.xcstrings`, `InfoPlist.xcstrings`), and the privacy manifest.
 
 ### Languages
