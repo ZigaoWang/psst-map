@@ -8,7 +8,7 @@ let package = Package(
     platforms: [.iOS(.v17), .macOS(.v14)],
     products: [.library(name: "H3", targets: ["H3"])],
     targets: [
-        .target(name: "CH3", path: "Sources/CH3", cSettings: [.unsafeFlags(["-w"])]),
+        .target(name: "CH3", path: "Sources/CH3"),
         .target(name: "H3", dependencies: ["CH3"], path: "Sources/H3"),
         .testTarget(name: "H3Tests", dependencies: ["H3"], path: "Tests/H3Tests"),
     ]
