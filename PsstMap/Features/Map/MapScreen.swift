@@ -172,12 +172,12 @@ struct MapScreen: View {
                 .floatingButtonStyle(circle: true)
                 .accessibilityLabel(String(localized: "Show my location"))
                 Button { showsKey = true } label: {
-                    Image(systemName: app.isFiltering ? "line.3.horizontal.decrease.circle.fill" : "list.bullet.rectangle")
+                    Image(systemName: app.isFiltering ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
                         .contentTransition(.symbolEffect(.replace))
                         .frame(width: 24, height: 24)
                 }
                 .floatingButtonStyle(circle: true)
-                .accessibilityLabel(String(localized: "Map key"))
+                .accessibilityLabel(String(localized: "Filter"))
             }
             .font(.body.weight(.medium))
             .foregroundStyle(.primary)

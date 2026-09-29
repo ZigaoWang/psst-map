@@ -34,14 +34,15 @@ final class AppModel {
     /// Shuffles the feed once per session, so it stays put while you scroll and can be warmed up early.
     var feedSeed = UInt64.random(in: 0...UInt64.max)
 
-    /// Kinds of place the person has hidden with the map key. Applies to the map and the feed.
-    var hiddenKinds: Set<Spot.Kind> = AppModel.loadHiddenKinds() {
-        didSet { UserDefaults.standard.set(hiddenKinds.map(\.rawValue), forKey: Self.hiddenKindsKey) }
+    /// Kinds of place to show. Empty means every kind. Choosing one shows only that kind; choosing more
+    /// adds them; choosing all of them, or the last one again, goes back to everything.
+    var shownKinds: Set<Spot.Kind> = AppModel.load(key: AppModel.shownKindsKey) {
+        didSet { UserDefaults.standard.set(shownKinds.map(\.rawValue), forKey: Self.shownKindsKey) }
     }
 
-    /// Story categories the person has hidden. A place stays visible while it has any story left.
-    var hiddenCategories: Set<Fact.Category> = AppModel.loadHiddenCategories() {
-        didSet { UserDefaults.standard.set(hiddenCategories.map(\.rawValue), forKey: Self.hiddenCategoriesKey) }
+    /// Story categories to show, with the same rules. A place shows while it has a story in one of them.
+    var shownCategories: Set<Fact.Category> = AppModel.load(key: AppModel.shownCategoriesKey) {
+        didSet { UserDefaults.standard.set(shownCategories.map(\.rawValue), forKey: Self.shownCategoriesKey) }
     }
 
     /// The places that pass both filters.
@@ -51,77 +52,59 @@ final class AppModel {
     }
 
     func isVisible(_ place: Place) -> Bool {
-        !hiddenKinds.contains(place.spot.kind)
-            && place.spot.facts.contains { !hiddenCategories.contains($0.category) }
+        isShown(place.spot.kind) && place.spot.facts.contains { isShown($0.category) }
     }
 
-    /// The story to lead with: the first one in a category that isn't hidden.
+    func isShown(_ kind: Spot.Kind) -> Bool { shownKinds.isEmpty || shownKinds.contains(kind) }
+    func isShown(_ category: Fact.Category) -> Bool { shownCategories.isEmpty || shownCategories.contains(category) }
+
+    /// The story to lead with: the first one in a category being shown.
     func leadFact(for place: Place) -> Fact {
-        place.spot.facts.first { !hiddenCategories.contains($0.category) } ?? place.leadFact
+        place.spot.facts.first { isShown($0.category) } ?? place.leadFact
     }
 
-    var isFiltering: Bool { !hiddenKinds.isEmpty || !hiddenCategories.isEmpty }
-
-    func toggle(_ category: Fact.Category) {
-        if hiddenCategories.contains(category) {
-            hiddenCategories.remove(category)
-        } else if hiddenCategories.count < Fact.Category.allCases.count - 1 {
-            hiddenCategories.insert(category)
-        }
-    }
-
-    func showOnly(_ category: Fact.Category) {
-        hiddenCategories = Set(Fact.Category.allCases).subtracting([category])
-    }
+    var isFiltering: Bool { !shownKinds.isEmpty || !shownCategories.isEmpty }
 
     func toggle(_ kind: Spot.Kind) {
-        if hiddenKinds.contains(kind) {
-            hiddenKinds.remove(kind)
-        } else if hiddenKinds.count < Spot.Kind.allCases.count - 1 {
-            // Hiding the last visible kind would leave an empty map, so that tap does nothing.
-            hiddenKinds.insert(kind)
+        shownKinds = Self.toggled(kind, in: shownKinds, all: Spot.Kind.allCases)
+    }
+
+    func toggle(_ category: Fact.Category) {
+        shownCategories = Self.toggled(category, in: shownCategories, all: Fact.Category.allCases)
+    }
+
+    private static func toggled<Value: Hashable>(_ value: Value, in set: Set<Value>, all: [Value]) -> Set<Value> {
+        var result = set
+        if result.contains(value) {
+            result.remove(value)
+        } else {
+            result.insert(value)
         }
-    }
-
-    func showOnly(_ kind: Spot.Kind) {
-        hiddenKinds = Set(Spot.Kind.allCases).subtracting([kind])
-    }
-
-    func showAllKinds() {
-        hiddenKinds = []
+        // Everything chosen is the same as nothing chosen: show all.
+        return result.count == all.count ? [] : result
     }
 
     func clearFilters() {
-        hiddenKinds = []
-        hiddenCategories = []
+        shownKinds = []
+        shownCategories = []
     }
 
     /// A few words saying what the filter is doing, for the chip on the map.
     var filterSummary: String {
-        switch (hiddenKinds.isEmpty, hiddenCategories.isEmpty) {
-        case (false, true):
-            String(localized: "\(Spot.Kind.allCases.count - hiddenKinds.count) of \(Spot.Kind.allCases.count) kinds")
-        case (true, false):
-            hiddenCategories.count == Fact.Category.allCases.count - 1
-                ? (Set(Fact.Category.allCases).subtracting(hiddenCategories).first?.label ?? "")
-                : String(localized: "\(Fact.Category.allCases.count - hiddenCategories.count) of \(Fact.Category.allCases.count) stories")
-        default:
-            String(localized: "Filtered")
+        switch (shownKinds.count, shownCategories.count) {
+        case (1, 0): shownKinds.first!.label
+        case (_, 0): String(localized: "\(shownKinds.count) kinds")
+        case (0, 1): shownCategories.first!.label
+        case (0, _): String(localized: "\(shownCategories.count) story types")
+        default: String(localized: "Filtered")
         }
     }
 
-    private static let hiddenKindsKey = "filter.hiddenKinds"
+    private static let shownKindsKey = "filter.shownKinds"
+    private static let shownCategoriesKey = "filter.shownCategories"
 
-    private static let hiddenCategoriesKey = "filter.hiddenCategories"
-
-    private static func loadHiddenCategories() -> Set<Fact.Category> {
-        let raw = UserDefaults.standard.stringArray(forKey: hiddenCategoriesKey) ?? []
-        return Set(raw.compactMap(Fact.Category.init(rawValue:)))
-    }
-
-    private static func loadHiddenKinds() -> Set<Spot.Kind> {
-        let raw = UserDefaults.standard.stringArray(forKey: hiddenKindsKey) ?? []
-        return Set(raw.compactMap(Spot.Kind.init(rawValue:)))
+    private static func load<Value: RawRepresentable & Hashable>(key: String) -> Set<Value> where Value.RawValue == String {
+        Set((UserDefaults.standard.stringArray(forKey: key) ?? []).compactMap(Value.init(rawValue:)))
     }
 
     let saved = SavedStore()
