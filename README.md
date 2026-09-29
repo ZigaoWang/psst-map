@@ -12,17 +12,24 @@ xcodegen generate              # the Xcode project is generated, not committed
 open PsstMap.xcodeproj
 ```
 
-Put the area files in `Content/areas/` before building: from a checkout of `psst-content` next to this one, run `python3 scripts/publish.py` there. Without them the app builds and runs, but shows its "couldn't load places" screen, and the content tests skip.
+Put a content snapshot in `Content/v2/` before building: from a checkout of `psst-content` next to this one, run `uv run psst bundle` there. It copies what production serves. Without it the app builds and runs, downloads content on first launch if it can, and the content tests skip.
 
 Run the `PsstMap` scheme. Tests: `xcodebuild test -project PsstMap.xcodeproj -scheme PsstMap -destination 'platform=iOS Simulator,name=iPhone 17 Pro'`.
 
 ## How it's put together
 
-- `Content/areas/`: where the area files go at build time. They are bundled into the app; there is no server. The files themselves live in the `psst-content` repository (see "Content" below).
-- `PsstMap/Model`: the decoded content (`Area`, `Spot`, `Fact`) and the `Catalog` the app browses.
-- `PsstMap/Services`: content loading, saved places, feed history, location, pictures (`SpotVisuals`), and China map handling (`ChinaCoordinates`, `MapDatum`).
-- `PsstMap/Features`: the map, the feed, the place detail, saved places, about, and the welcome screen.
+- `Content/v2/`: the content snapshot bundled with the app (see "Content" below). Git ignores it.
+- `PsstMap/Model`: the decoded content (`Spot`, `Fact`, `Tag`, cities and areas) and the `Catalog` the app browses, grouped by city and neighborhood.
+- `PsstMap/Services`: loading and updating content (`ContentLibrary`, `ContentUpdater`), search (`SearchIndex`), story translation, problem reports, saved places, feed history, location, pictures (`SpotVisuals`), and China map handling (`ChinaCoordinates`, `MapDatum`).
+- `PsstMap/Features`: the map, search, the feed, the place detail, threads (tags), saved places, settings, and the welcome screen.
 - `PsstMap/Design`: colors, badges, and shared components.
+- `PsstMap/Resources`: assets, the String Catalogs (`Localizable.xcstrings`, `InfoPlist.xcstrings`), and the privacy manifest.
+
+### Languages
+
+Stories are written in English. Each one has a Translate button when the device language isn't English and Apple's on-device translation supports it; translations are cached on the device and never sent anywhere. Place names are shown in the local script and, when known, in the reader's language. Search matches names in any stored language, ignores accents and case, treats Traditional and Simplified Chinese alike, accepts pinyin, and translates the query to English on the device when nothing matches.
+
+The interface is in String Catalogs, in English and Simplified Chinese. To add a language, add it to `Localizable.xcstrings` and `InfoPlist.xcstrings` in Xcode and translate every string; no code changes. Text shown in the UI must go through `Text("...")` or `String(localized:)` so it's extracted.
 
 ### Maps in mainland China
 
@@ -36,7 +43,7 @@ Each place gets a picture from Apple: a Look Around street view for small things
 
 ### Room to grow
 
-Notifications about nearby places aren't built yet. When they are, `Catalog.places(near:within:)` already finds places around a WGS-84 location, place ids (`areaId/spotId`) are stable by rule, and `LocationService` is isolated from the UI.
+Notifications about nearby places aren't built yet. When they are, `Catalog.places(near:within:)` already finds places around a WGS-84 location, place ids (`pl_...`) are permanent, and `LocationService` is isolated from the UI.
 
 ## Icon
 
@@ -44,4 +51,12 @@ Notifications about nearby places aren't built yet. When they are, `Catalog.plac
 
 ## Content
 
-The places and facts are a separate work with their own scope and license, kept in the `psst-content` repository: the area files, the content guide (format, research rules, checklist), the validator, and the research tools. `python3 scripts/publish.py` there validates everything and syncs it into this repository's `Content/areas/`, which git ignores. The app reads whatever files are there, so new content needs no code changes. The format's rules for compatibility (unknown categories and kinds, broken entries) are described in `PsstMap/Model/Content.swift`.
+The places and facts are a separate work with their own scope and license. They live in a database managed by the `psst-content` repository, which publishes them as content format 2: a manifest and one pack per city, named by their hashes, at `https://psst.zigao.wang/content/production/v2/`.
+
+- The app ships with a snapshot of production (`uv run psst bundle` in `psst-content`), so it works offline from the first launch.
+- In the background it checks the manifest and downloads only packs that changed. Each pack is checked against its hash and decoded before the new set is switched in, and anything that fails keeps the last good version (`ContentUpdater`, `ContentLibrary`).
+- Place ids are permanent. Saved places and feed history from before the move (`areaId/spotId`) are rewritten to them through the `legacyIds` map.
+- Decoding is forgiving so newer content never breaks an older app; the rules are at the top of `PsstMap/Model/Content.swift`. An incompatible format would be published as `v3` beside `v2`.
+- In debug builds, set the `debug.contentBaseURL` default to point the app at another server.
+
+"Report a problem" on a story sends the story id, a reason, and an optional note to `https://psst.zigao.wang/api/v1/reports`, queued on the device until it's online. "Help choose new areas" (on by default, off in Settings) sends the rounded center of an empty map area. Both are described in the privacy policy and declared in `PrivacyInfo.xcprivacy`.
