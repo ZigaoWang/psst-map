@@ -83,7 +83,7 @@ struct FeedCard: View {
                 Circle()
                     .fill(place.spot.kind.color)
                     .frame(width: 8, height: 8)
-                Text(place.areaName)
+                Text(place.locationLine)
                 if fact.status != .fact {
                     Text("· \(fact.status.label)")
                         .foregroundStyle(fact.status == .legend ? Color(white: 0.85) : .white.opacity(0.7))
@@ -144,7 +144,7 @@ struct FeedCard: View {
     }
 
     private var accessibilityText: String {
-        var parts = [place.name, place.areaName]
+        var parts = [place.name, place.locationLine]
         if fact.status == .legend { parts.append(String(localized: "Legend, not a proven fact")) }
         if fact.status == .disputed { parts.append(String(localized: "Disputed")) }
         parts.append(fact.short)

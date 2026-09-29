@@ -40,6 +40,19 @@ nonisolated struct Place: Hashable, Identifiable, Sendable {
     var areaID: String { neighborhoodID ?? spot.districtID ?? cityID }
     var areaName: String { neighborhoodName ?? districtName ?? city }
 
+    /// Where it is, from the neighborhood out to the country: "Hackney Central, London, United Kingdom".
+    /// Repeats are left out ("Kuala Lumpur" isn't also its own district; Hong Kong isn't also its country).
+    var locationLine: String {
+        var parts: [String] = []
+        if areaName != city { parts.append(areaName) }
+        parts.append(city)
+        if let code = spot.countryCode, let country = Locale.current.localizedString(forRegionCode: code),
+           !country.localizedCaseInsensitiveContains(city) {
+            parts.append(country)
+        }
+        return parts.joined(separator: ", ")
+    }
+
     /// The place's name in the reader's language, when there is one and it adds something beyond the
     /// English and local names already shown.
     func name(forLanguages languages: [String]) -> String? {
