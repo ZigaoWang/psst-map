@@ -19,7 +19,8 @@ final class AppModel {
     struct MapFocus: Equatable {
         enum Target: Equatable {
             case place(String)
-            case area(String)
+            /// Frame a region: a city or a neighborhood.
+            case bounds(CityRecord.Bounds)
         }
         let target: Target
         let token = UUID()
@@ -108,18 +109,55 @@ final class AppModel {
     let saved = SavedStore()
     let seen = SeenStore()
     let location = LocationService()
+    let reports = ReportOutbox()
+
+    private(set) var content: ContentLibrary.Loaded?
+    /// Built in the background whenever the catalog changes; nil for the moment in between.
+    private(set) var searchIndex: SearchIndex?
+    private var lastUpdateCheck: Date?
+    private let updater = ContentUpdater()
 
     func load() async {
         loadState = .loading
         do {
-            let result = try await Task.detached(priority: .userInitiated) {
-                try ContentLoader.load()
+            let loaded = try await Task.detached(priority: .userInitiated) {
+                try ContentLibrary.loadBest()
             }.value
-            catalog = result.catalog
+            install(loaded)
             loadState = .loaded
             warmUpFeed()
+            Task { await checkForUpdates() }
         } catch {
             loadState = .failed(error.localizedDescription)
+        }
+    }
+
+    private func install(_ loaded: ContentLibrary.Loaded) {
+        content = loaded
+        catalog = loaded.catalog
+        searchIndex = nil
+        let catalog = loaded.catalog
+        Task {
+            let index = await Task.detached(priority: .utility) { SearchIndex(catalog: catalog) }.value
+            if self.catalog.contentVersion == catalog.contentVersion { self.searchIndex = index }
+        }
+        // Places saved before ids became permanent ("areaId/spotId") are moved to their new ids.
+        saved.migrate(using: loaded.catalog)
+        seen.migrate(using: loaded.catalog)
+    }
+
+    /// Looks for newer content, at most every few hours. New content replaces the current catalog only
+    /// once it has fully downloaded and checked out; any failure leaves everything as it was.
+    func checkForUpdates(force: Bool = false) async {
+        if !force, let lastUpdateCheck, lastUpdateCheck.timeIntervalSinceNow > -6 * 3600 { return }
+        lastUpdateCheck = Date()
+        await reports.flush()
+        do {
+            if let newer = try await updater.update(current: content) {
+                install(newer)
+            }
+        } catch {
+            // Offline or a bad download: keep what we have and try again later.
         }
     }
 
@@ -139,8 +177,8 @@ final class AppModel {
         selectedTab = .map
     }
 
-    func showOnMap(areaID: String) {
-        mapFocus = MapFocus(target: .area(areaID))
+    func showOnMap(bounds: CityRecord.Bounds) {
+        mapFocus = MapFocus(target: .bounds(bounds))
         selectedTab = .map
     }
 }

@@ -7,7 +7,6 @@ struct PlaceMapView: UIViewRepresentable {
     let places: [Place]
     @Binding var selectedID: String?
     let focus: AppModel.MapFocus?
-    let areaBounds: (String) -> Area.Bounds?
     let showsUserLocation: Bool
     /// Called with the WGS-84-ish center whenever the map settles, so the screen can name the area.
     let onRegionChange: (MKCoordinateRegion) -> Void
@@ -152,13 +151,17 @@ struct PlaceMapView: UIViewRepresentable {
                 map.setVisibleMapRect(rect, edgePadding: UIEdgeInsets(top: 80, left: 20, bottom: bottom, right: 20),
                                       animated: true)
                 DispatchQueue.main.async { [weak self] in self?.parent.selectedID = id }
-            case .area(let id):
-                guard let bounds = parent.areaBounds(id) else { return }
+            case .bounds(let bounds):
                 let sw = MKMapPoint(MapDatum.shared.mapCoordinate(for: .init(latitude: bounds.south, longitude: bounds.west)))
                 let ne = MKMapPoint(MapDatum.shared.mapCoordinate(for: .init(latitude: bounds.north, longitude: bounds.east)))
-                let rect = MKMapRect(x: min(sw.x, ne.x), y: min(sw.y, ne.y),
+                var rect = MKMapRect(x: min(sw.x, ne.x), y: min(sw.y, ne.y),
                                      width: abs(ne.x - sw.x), height: abs(ne.y - sw.y))
-                map.setVisibleMapRect(rect, edgePadding: UIEdgeInsets(top: 110, left: 24, bottom: 90, right: 24),
+                // A neighborhood with one place has no size; show a few streets around it.
+                let minimum = 700 * MKMapPointsPerMeterAtLatitude((bounds.south + bounds.north) / 2)
+                if rect.width < minimum || rect.height < minimum {
+                    rect = rect.insetBy(dx: min(0, (rect.width - minimum) / 2), dy: min(0, (rect.height - minimum) / 2))
+                }
+                map.setVisibleMapRect(rect, edgePadding: UIEdgeInsets(top: 150, left: 24, bottom: 90, right: 24),
                                       animated: true)
                 DispatchQueue.main.async { [weak self] in self?.parent.selectedID = nil }
             }

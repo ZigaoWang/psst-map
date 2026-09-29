@@ -6,6 +6,7 @@ struct MapScreen: View {
     @Environment(\.openURL) private var openURL
     @State private var selectedID: String?
     @State private var showsSearch = false
+    @State private var openTag: Tag?
     @State private var showsKey = false
     @State private var visibleAreaName: String?
     @State private var regionRequest: PlaceMapView.RegionRequest?
@@ -28,7 +29,6 @@ struct MapScreen: View {
             places: app.visiblePlaces,
             selectedID: $selectedID,
             focus: app.mapFocus,
-            areaBounds: { app.catalog.area(id: $0)?.bounds },
             showsUserLocation: app.location.isAuthorized,
             onRegionChange: updateVisibleArea,
             regionRequest: regionRequest,
@@ -50,10 +50,16 @@ struct MapScreen: View {
             SearchSheet(onPlace: { place in
                 showsSearch = false
                 app.showOnMap(place)
-            }, onArea: { areaID in
+            }, onRegion: { bounds in
                 showsSearch = false
-                app.mapFocus = AppModel.MapFocus(target: .area(areaID))
+                app.mapFocus = AppModel.MapFocus(target: .bounds(bounds))
+            }, onTag: { tag in
+                showsSearch = false
+                openTag = tag
             })
+        }
+        .sheet(item: $openTag) { tag in
+            TagSheet(tag: tag)
         }
         .sheet(isPresented: $showsKey) {
             FilterSheet()
@@ -208,31 +214,31 @@ struct MapScreen: View {
     }
 
     private func updateVisibleArea(_ region: MKCoordinateRegion) {
-        // Only name an area when zoomed in far enough for it to mean something.
-        guard region.span.latitudeDelta < 0.25 else {
-            visibleAreaName = nearestCity(to: region.center)
-            return
+        let center = CLLocation(latitude: region.center.latitude, longitude: region.center.longitude)
+        let span = region.span
+        let visible = app.visiblePlaces.filter { place in
+            abs(place.coordinate.latitude - region.center.latitude) <= span.latitudeDelta / 2
+                && abs(place.coordinate.longitude - region.center.longitude) <= span.longitudeDelta / 2
         }
-        let center = region.center
-        let containing = app.catalog.areas.first { area in
-            let sw = MapDatum.shared.mapCoordinate(for: .init(latitude: area.bounds.south, longitude: area.bounds.west))
-            let ne = MapDatum.shared.mapCoordinate(for: .init(latitude: area.bounds.north, longitude: area.bounds.east))
-            return (sw.latitude...ne.latitude).contains(center.latitude)
-                && (sw.longitude...ne.longitude).contains(center.longitude)
+        // Zoomed in: the neighborhood of the place nearest the middle. Zoomed out: the city.
+        if span.latitudeDelta < 0.06,
+           let nearest = visible.min(by: { $0.location.distance(from: center) < $1.location.distance(from: center) }) {
+            visibleAreaName = nearest.neighborhoodName ?? nearest.city
+        } else {
+            visibleAreaName = nearestCity(to: center)?.name
         }
-        visibleAreaName = containing?.name ?? nearestCity(to: center)
+        // A city-sized view with nothing in it: tell us, anonymously, that someone looked here.
+        if visible.isEmpty, (0.03...0.8).contains(span.latitudeDelta), app.loadState == .loaded {
+            DemandSignal.send(center: region.center)
+        }
     }
 
-    private func nearestCity(to center: CLLocationCoordinate2D) -> String? {
-        let here = CLLocation(latitude: center.latitude, longitude: center.longitude)
-        let nearest = app.catalog.areas.min { a, b in
-            here.distance(from: CLLocation(latitude: a.bounds.center.latitude, longitude: a.bounds.center.longitude))
-                < here.distance(from: CLLocation(latitude: b.bounds.center.latitude, longitude: b.bounds.center.longitude))
-        }
-        guard let nearest else { return nil }
-        let distance = here.distance(from: CLLocation(latitude: nearest.bounds.center.latitude,
-                                                      longitude: nearest.bounds.center.longitude))
-        return distance < 60_000 ? nearest.city : nil
+    private func nearestCity(to center: CLLocation) -> City? {
+        app.catalog.cities
+            .map { ($0, center.distance(from: CLLocation(latitude: $0.bounds.center.latitude,
+                                                         longitude: $0.bounds.center.longitude))) }
+            .filter { $0.1 < 60_000 }
+            .min { $0.1 < $1.1 }?.0
     }
 
     private func locate() {

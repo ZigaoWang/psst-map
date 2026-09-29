@@ -19,7 +19,11 @@ enum DebugLaunch {
 
     static func apply(to app: AppModel) {
         if let tab { app.selectedTab = tab }
-        if let areaID { app.showOnMap(areaID: areaID) }
+        // `-debug.area` takes a city or neighborhood id.
+        if let areaID {
+            if let city = app.catalog.city(id: areaID) { app.showOnMap(bounds: city.bounds) }
+            if let hood = app.catalog.neighborhood(id: areaID) { app.showOnMap(bounds: hood.bounds) }
+        }
         if let placeID, let place = app.catalog.place(id: placeID) { app.showOnMap(place) }
     }
 }

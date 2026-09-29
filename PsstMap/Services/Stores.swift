@@ -28,6 +28,19 @@ final class SavedStore {
         ids.removeAll { $0 == id }
         defaults.set(ids, forKey: Self.key)
     }
+
+    /// Rewrites old ids to current ones. Ids that no longer resolve are kept, in case the place returns.
+    func migrate(using catalog: Catalog) {
+        var seen = Set<String>()
+        let migrated = ids.compactMap { id -> String? in
+            let current = catalog.resolve(id) ?? id
+            return seen.insert(current).inserted ? current : nil
+        }
+        if migrated != ids {
+            ids = migrated
+            defaults.set(ids, forKey: Self.key)
+        }
+    }
 }
 
 /// Which places have already appeared in the feed, so it can keep showing new ones first.
@@ -45,6 +58,14 @@ final class SeenStore {
     func markSeen(_ id: String) {
         guard ids.insert(id).inserted else { return }
         defaults.set(Array(ids), forKey: Self.key)
+    }
+
+    func migrate(using catalog: Catalog) {
+        let migrated = Set(ids.map { catalog.resolve($0) ?? $0 })
+        if migrated != ids {
+            ids = migrated
+            defaults.set(Array(ids), forKey: Self.key)
+        }
     }
 
     func forget(_ idsToForget: some Sequence<String>) {

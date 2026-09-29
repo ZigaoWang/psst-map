@@ -6,7 +6,7 @@ enum FeedScope: Hashable, Codable {
     case everywhere
     case nearMe
     case city(String)
-    case area(String)
+    case neighborhood(String)
 }
 
 /// Decides the order of the feed. Pure, so it is easy to test.

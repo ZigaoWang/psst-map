@@ -103,9 +103,9 @@ struct FeedScreen: View {
             ForEach(app.catalog.cities) { city in
                 Menu(city.name) {
                     Picker(city.name, selection: $scope) {
-                        Text("All of \(city.name)").tag(FeedScope.city(city.name))
-                        ForEach(city.areas) { area in
-                            Text(area.name).tag(FeedScope.area(area.id))
+                        Text("All of \(city.name)").tag(FeedScope.city(city.id))
+                        ForEach(city.neighborhoods) { hood in
+                            Text(hood.name).tag(FeedScope.neighborhood(hood.id))
                         }
                     }
                 }
@@ -136,16 +136,16 @@ struct FeedScreen: View {
         switch scope {
         case .everywhere: String(localized: "Everywhere")
         case .nearMe: String(localized: "Near me")
-        case .city(let name): name
-        case .area(let id): app.catalog.area(id: id)?.name ?? String(localized: "Everywhere")
+        case .city(let id): app.catalog.city(id: id)?.name ?? String(localized: "Everywhere")
+        case .neighborhood(let id): app.catalog.neighborhood(id: id)?.name ?? String(localized: "Everywhere")
         }
     }
 
     private func scopedPlaces() -> [Place] {
         let places: [Place] = switch scope {
         case .everywhere, .nearMe: app.catalog.places
-        case .city(let name): app.catalog.places(inCity: name)
-        case .area(let id): app.catalog.places(inArea: id)
+        case .city(let id): app.catalog.places(inCity: id)
+        case .neighborhood(let id): app.catalog.places(inNeighborhood: id)
         }
         return places.filter(app.isVisible)
     }

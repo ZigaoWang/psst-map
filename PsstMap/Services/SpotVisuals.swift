@@ -302,7 +302,7 @@ enum MapFraming {
     private static let countriesWith3D: Set<String> = ["GB", "US", "CA", "FR", "DE", "ES", "IT", "NL", "IE", "JP", "AU"]
 
     static func shows3D(_ place: Place) -> Bool {
-        countriesWith3D.contains(place.countryCode) && (place.spot.size ?? .medium) != .small
+        countriesWith3D.contains(place.spot.countryCode ?? "") && (place.spot.size ?? .medium) != .small
     }
 
     static func distance(for place: Place) -> CLLocationDistance {

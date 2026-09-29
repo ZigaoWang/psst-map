@@ -74,7 +74,7 @@ extension Spot.Kind {
         }
     }
 
-    var label: String {
+    nonisolated var label: String {
         switch self {
         case .transit: String(localized: "Transport")
         case .crossing: String(localized: "Bridge or tunnel")

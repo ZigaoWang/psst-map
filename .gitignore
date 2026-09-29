@@ -14,6 +14,6 @@ __pycache__/
 PsstMap.xcodeproj/
 
 # Place content is researched, licensed, and distributed separately from the app.
-# Put area files in Content/areas locally. See README.md.
-Content/areas/*
-!Content/areas/.gitkeep
+# `psst bundle` (in psst-content) writes the snapshot the app ships with into Content/v2. See README.md.
+Content/v2/*
+!Content/v2/.gitkeep
