@@ -69,3 +69,20 @@ final class SearchIndexTests: XCTestCase {
         XCTAssertEqual(names("building").count, 6)
     }
 }
+
+final class AreaNameTests: XCTestCase {
+    func testAreasUseTheReadersLanguageWhenKnown() {
+        func catalog(_ language: String) -> Catalog {
+            Fixtures.catalog(
+                cities: [CityRecord(id: "wof:london", name: "London", names: ["zh-Hans": "伦敦"], countryCode: "GB",
+                                    bounds: Fixtures.bounds)],
+                areas: [AreaRecord(id: "wof:soho", level: "neighborhood", name: "Soho", cityId: "wof:london")],
+                packs: [CityPack(cityId: "wof:london", places: [Fixtures.spot("pl_a", "A", neighborhood: "wof:soho")])],
+                language: language)
+        }
+        XCTAssertEqual(catalog("zh-Hans-CN").cities[0].displayName, "伦敦")
+        XCTAssertEqual(catalog("zh-Hans-CN").places[0].city, "伦敦")
+        XCTAssertEqual(catalog("zh-Hans-CN").places[0].neighborhoodName, "Soho", "English when there's no name")
+        XCTAssertEqual(catalog("en-GB").cities[0].displayName, "London")
+    }
+}

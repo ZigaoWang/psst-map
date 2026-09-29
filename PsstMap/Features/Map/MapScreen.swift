@@ -225,7 +225,7 @@ struct MapScreen: View {
            let nearest = visible.min(by: { $0.location.distance(from: center) < $1.location.distance(from: center) }) {
             visibleAreaName = nearest.neighborhoodName ?? nearest.city
         } else {
-            visibleAreaName = nearestCity(to: center)?.name
+            visibleAreaName = nearestCity(to: center)?.displayName
         }
         // A city-sized view with nothing in it: tell us, anonymously, that someone looked here.
         if visible.isEmpty, (0.03...0.8).contains(span.latitudeDelta), app.loadState == .loaded {

@@ -52,7 +52,7 @@ struct SettingsView: View {
                     LabeledContent("Places", value: "\(app.catalog.places.count)")
                     LabeledContent("Stories", value: "\(app.catalog.factCount)")
                     ForEach(app.catalog.cities) { city in
-                        LabeledContent(city.name, value: city.neighborhoods.count == 1
+                        LabeledContent(city.displayName, value: city.neighborhoods.count == 1
                                        ? String(localized: "1 neighborhood")
                                        : String(localized: "\(city.neighborhoods.count) neighborhoods"))
                     }

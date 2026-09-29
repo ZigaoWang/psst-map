@@ -7,7 +7,7 @@ nonisolated struct Place: Hashable, Identifiable, Sendable {
     let id: String
     let spot: Spot
     let cityID: String
-    /// The city's English name.
+    /// Area names here are in the reader's language when one is known, else in English.
     let city: String
     let districtName: String?
     let neighborhoodID: String?
@@ -71,6 +71,8 @@ nonisolated struct Place: Hashable, Identifiable, Sendable {
 nonisolated struct Neighborhood: Identifiable, Hashable, Sendable {
     let id: String
     let name: String
+    /// The name in the reader's language when one is known, else `name`.
+    let displayName: String
     let names: [String: String]
     let cityID: String
     let placeCount: Int
@@ -80,6 +82,8 @@ nonisolated struct Neighborhood: Identifiable, Hashable, Sendable {
 nonisolated struct City: Identifiable, Hashable, Sendable {
     let id: String
     let name: String
+    /// The name in the reader's language when one is known, else `name`.
+    let displayName: String
     let names: [String: String]
     let countryCode: String
     let bounds: CityRecord.Bounds
@@ -99,7 +103,12 @@ nonisolated struct Catalog: Sendable {
     private let tagsByID: [String: Tag]
     private let legacyIDs: [String: String]
 
-    init(common: CommonPack, packs: [CityPack], contentVersion: String? = nil) {
+    /// `language` picks the names of cities and areas shown in the app; English names are the fallback.
+    init(common: CommonPack, packs: [CityPack], contentVersion: String? = nil,
+         language: String = Locale.preferredLanguages.first ?? "en") {
+        func display(_ name: String, _ names: [String: String]) -> String {
+            Place.lookup(language, in: names) ?? name
+        }
         let areas = Dictionary(common.areas.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let records = Dictionary(common.cities.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         var places: [Place] = []
@@ -107,9 +116,11 @@ nonisolated struct Catalog: Sendable {
             guard let city = records[pack.cityId] else { continue }
             for spot in pack.places where !spot.facts.isEmpty {
                 let neighborhood = spot.neighborhoodID.flatMap { areas[$0] }
-                places.append(Place(spot: spot, cityID: city.id, city: city.name,
-                                    districtName: spot.districtID.flatMap { areas[$0]?.name },
-                                    neighborhoodID: neighborhood?.id, neighborhoodName: neighborhood?.name))
+                let district = spot.districtID.flatMap { areas[$0] }
+                places.append(Place(spot: spot, cityID: city.id, city: display(city.name, city.names),
+                                    districtName: district.map { display($0.name, $0.names) },
+                                    neighborhoodID: neighborhood?.id,
+                                    neighborhoodName: neighborhood.map { display($0.name, $0.names) }))
             }
         }
         places.sort { ($0.city, $0.name) < ($1.city, $1.name) }
@@ -127,17 +138,19 @@ nonisolated struct Catalog: Sendable {
             var cityNeighborhoods: [Neighborhood] = []
             for (id, hoodPlaces) in byNeighborhood {
                 guard let area = areas[id] else { continue }
-                let hood = Neighborhood(id: id, name: area.name, names: area.names, cityID: cityID,
+                let hood = Neighborhood(id: id, name: area.name, displayName: display(area.name, area.names),
+                                        names: area.names, cityID: cityID,
                                         placeCount: hoodPlaces.count, bounds: Self.bounds(of: hoodPlaces))
                 neighborhoods[id] = hood
                 cityNeighborhoods.append(hood)
             }
-            cityNeighborhoods.sort { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
-            cities.append(City(id: cityID, name: record.name, names: record.names, countryCode: record.countryCode,
+            cityNeighborhoods.sort { $0.displayName.localizedStandardCompare($1.displayName) == .orderedAscending }
+            cities.append(City(id: cityID, name: record.name, displayName: display(record.name, record.names),
+                               names: record.names, countryCode: record.countryCode,
                                bounds: record.bounds, neighborhoods: cityNeighborhoods, placeCount: cityPlaces.count))
         }
         // Cities with the most places first, so the biggest collections lead the pickers.
-        self.cities = cities.sorted { ($0.placeCount, $1.name) > ($1.placeCount, $0.name) }
+        self.cities = cities.sorted { ($0.placeCount, $1.displayName) > ($1.placeCount, $0.displayName) }
         self.citiesByID = Dictionary(cities.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         self.neighborhoodsByID = neighborhoods
         let usedTags = Set(places.flatMap { $0.spot.facts.flatMap(\.tags) })

@@ -88,7 +88,7 @@ struct SearchSheet: View {
         Section {
             ForEach(app.catalog.cities) { city in
                 NavigationLink(value: city) {
-                    AreaRow(title: localized(city.name, city.names), subtitle: nil, count: city.placeCount)
+                    AreaRow(title: city.displayName, subtitle: nil, count: city.placeCount)
                 }
             }
         } header: {
@@ -150,14 +150,14 @@ struct SearchSheet: View {
             Section("Areas") {
                 ForEach(results.cities) { city in
                     Button { onRegion(city.bounds) } label: {
-                        AreaRow(title: localized(city.name, city.names), subtitle: nil, count: city.placeCount)
+                        AreaRow(title: city.displayName, subtitle: nil, count: city.placeCount)
                     }
                     .buttonStyle(.plain)
                 }
                 ForEach(results.neighborhoods.prefix(12)) { hood in
                     Button { onRegion(hood.bounds) } label: {
-                        AreaRow(title: localized(hood.name, hood.names),
-                                subtitle: app.catalog.city(id: hood.cityID)?.name, count: hood.placeCount)
+                        AreaRow(title: hood.displayName,
+                                subtitle: app.catalog.city(id: hood.cityID)?.displayName, count: hood.placeCount)
                     }
                     .buttonStyle(.plain)
                 }
@@ -191,10 +191,6 @@ struct SearchSheet: View {
             grouped[title, default: []].append(match)
         }
         return order.map { ($0, grouped[$0]!) }
-    }
-
-    private func localized(_ name: String, _ names: [String: String]) -> String {
-        Place.lookup(Locale.preferredLanguages.first ?? "en", in: names) ?? name
     }
 
     // MARK: Translation fallback
@@ -262,14 +258,14 @@ private struct CityNeighborhoods: View {
         List {
             Section {
                 Button { onRegion(city.bounds) } label: {
-                    AreaRow(title: String(localized: "All of \(city.name)"), subtitle: nil, count: city.placeCount)
+                    AreaRow(title: String(localized: "All of \(city.displayName)"), subtitle: nil, count: city.placeCount)
                 }
                 .buttonStyle(.plain)
             }
             Section("Neighborhoods") {
-                ForEach(city.neighborhoods.sorted { ($0.placeCount, $1.name) > ($1.placeCount, $0.name) }) { hood in
+                ForEach(city.neighborhoods.sorted { ($0.placeCount, $1.displayName) > ($1.placeCount, $0.displayName) }) { hood in
                     Button { onRegion(hood.bounds) } label: {
-                        AreaRow(title: Place.lookup(Locale.preferredLanguages.first ?? "en", in: hood.names) ?? hood.name,
+                        AreaRow(title: hood.displayName,
                                 subtitle: nil, count: hood.placeCount)
                     }
                     .buttonStyle(.plain)
@@ -277,7 +273,7 @@ private struct CityNeighborhoods: View {
             }
         }
         .listStyle(.insetGrouped)
-        .navigationTitle(city.name)
+        .navigationTitle(city.displayName)
         .navigationBarTitleDisplayMode(.inline)
     }
 }

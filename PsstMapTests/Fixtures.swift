@@ -16,7 +16,8 @@ enum Fixtures {
     }
 
     static func catalog(cities: [CityRecord], areas: [AreaRecord] = [], tags: [Tag] = [],
-                        legacyIds: [String: String] = [:], packs: [CityPack]) -> Catalog {
-        Catalog(common: CommonPack(cities: cities, areas: areas, tags: tags, legacyIds: legacyIds), packs: packs)
+                        legacyIds: [String: String] = [:], packs: [CityPack], language: String = "en") -> Catalog {
+        Catalog(common: CommonPack(cities: cities, areas: areas, tags: tags, legacyIds: legacyIds), packs: packs,
+                language: language)
     }
 }

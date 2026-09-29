@@ -101,11 +101,11 @@ struct FeedScreen: View {
                 Label("Near me", systemImage: "location").tag(FeedScope.nearMe)
             }
             ForEach(app.catalog.cities) { city in
-                Menu(city.name) {
-                    Picker(city.name, selection: $scope) {
-                        Text("All of \(city.name)").tag(FeedScope.city(city.id))
+                Menu(city.displayName) {
+                    Picker(city.displayName, selection: $scope) {
+                        Text("All of \(city.displayName)").tag(FeedScope.city(city.id))
                         ForEach(city.neighborhoods) { hood in
-                            Text(hood.name).tag(FeedScope.neighborhood(hood.id))
+                            Text(hood.displayName).tag(FeedScope.neighborhood(hood.id))
                         }
                     }
                 }
@@ -136,8 +136,8 @@ struct FeedScreen: View {
         switch scope {
         case .everywhere: String(localized: "Everywhere")
         case .nearMe: String(localized: "Near me")
-        case .city(let id): app.catalog.city(id: id)?.name ?? String(localized: "Everywhere")
-        case .neighborhood(let id): app.catalog.neighborhood(id: id)?.name ?? String(localized: "Everywhere")
+        case .city(let id): app.catalog.city(id: id)?.displayName ?? String(localized: "Everywhere")
+        case .neighborhood(let id): app.catalog.neighborhood(id: id)?.displayName ?? String(localized: "Everywhere")
         }
     }
 
