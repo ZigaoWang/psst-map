@@ -361,6 +361,16 @@
         }
       }
     },
+    "Contact": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "联系"
+          }
+        }
+      }
+    },
     "Couldn't find your location. Showing everywhere instead.": {
       "localizations": {
         "zh-Hans": {
@@ -867,6 +877,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "四处看看"
+          }
+        }
+      }
+    },
+    "Made by": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开发者"
           }
         }
       }

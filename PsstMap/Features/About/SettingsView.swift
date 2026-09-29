@@ -83,6 +83,12 @@ struct SettingsView: View {
                 .font(.subheadline)
 
                 Section {
+                    Link(destination: URL(string: "https://www.zigao.wang")!) {
+                        LabeledContent("Made by", value: "Zigao Wang")
+                    }
+                    Link(destination: URL(string: "mailto:a@zigao.wang")!) {
+                        LabeledContent("Contact", value: "a@zigao.wang")
+                    }
                     LabeledContent("Version", value: version)
                     if let content = app.content {
                         LabeledContent("Stories updated", value: content.manifest.contentVersion.prefix(8)
