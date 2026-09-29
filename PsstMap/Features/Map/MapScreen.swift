@@ -202,6 +202,7 @@ struct MapScreen: View {
             .padding(.vertical, 4)
         }
         .scrollIndicators(.hidden)
+        .modifier(NoScrollEdgeEffect())
         .sensoryFeedback(.selection, trigger: app.shownCategories)
     }
 
@@ -261,5 +262,16 @@ struct MapScreen: View {
     private func centerOn(_ location: CLLocation) {
         let center = MapDatum.shared.mapCoordinate(for: location.coordinate)
         regionRequest = .init(region: MKCoordinateRegion(center: center, latitudinalMeters: 1_400, longitudinalMeters: 1_400))
+    }
+}
+
+/// Floating rows over the map shouldn't get iOS 26's scroll edge fade, which draws a band across the map.
+private struct NoScrollEdgeEffect: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content.scrollEdgeEffectHidden(true, for: .all)
+        } else {
+            content
+        }
     }
 }
