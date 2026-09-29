@@ -197,7 +197,7 @@ struct PlacePage: View {
     // MARK: Nearby
 
     private var neighbors: [Place] {
-        Array(PlaceCarousel.neighborhood(of: place, in: app.visiblePlaces, limit: 7).dropFirst())
+        Array(Nearby.places(around: place, in: app.visiblePlaces, limit: 7).dropFirst())
     }
 
     @ViewBuilder

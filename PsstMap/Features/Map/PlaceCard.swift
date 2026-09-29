@@ -1,64 +1,45 @@
 import CoreLocation
 import SwiftUI
 
-/// Picture cards for the selected place and its neighbors. Swipe sideways to move between nearby
-/// places, tap a card for the full story, swipe down or tap the close button to put them away.
-struct PlaceCarousel: View {
-    let places: [Place]
-    @Binding var selectedID: String?
-    let onOpen: (Place) -> Void
+/// The card for the selected pin: the place's picture with its name and best story. Tap it for the
+/// full page; swipe it down or tap the close button to put it away. Tapping another pin swaps it.
+struct PlaceCard: View {
+    let place: Place
+    let onOpen: () -> Void
     let onClose: () -> Void
-    let onReveal: (String) -> Void
 
-    @State private var scrolledID: String?
     @State private var drag: CGFloat = 0
 
     var body: some View {
-        ScrollView(.horizontal) {
-            LazyHStack(spacing: 10) {
-                ForEach(places) { place in
-                    PlaceMiniCard(place: place, onClose: onClose)
-                        .containerRelativeFrame(.horizontal) { width, _ in min(width - 40, 520) }
-                        .onTapGesture { onOpen(place) }
-                        .id(place.id)
-                }
-            }
-            .scrollTargetLayout()
+        ZStack {
+            PlaceMiniCard(place: place, onClose: onClose)
+                .id(place.id)
+                .transition(.opacity.combined(with: .scale(scale: 0.98)))
         }
-        .frame(height: 176)
-        .scrollTargetBehavior(.viewAligned)
-        .scrollPosition(id: $scrolledID)
-        .scrollIndicators(.hidden)
-        .contentMargins(.horizontal, 20, for: .scrollContent)
+        .animation(.snappy(duration: 0.25), value: place.id)
+        .frame(maxWidth: 520)
+        .padding(.horizontal, 16)
         .offset(y: max(drag, 0))
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 16)
-                .onChanged { value in
-                    guard abs(value.translation.height) > abs(value.translation.width) else { return }
-                    drag = value.translation.height
-                }
+        .onTapGesture(perform: onOpen)
+        .gesture(
+            DragGesture(minimumDistance: 10)
+                .onChanged { drag = $0.translation.height }
                 .onEnded { value in
-                    if drag > 70 || value.predictedEndTranslation.height > 180 {
+                    if value.translation.height > 60 || value.predictedEndTranslation.height > 160 {
                         onClose()
+                    } else if value.translation.height < -40 {
+                        onOpen()
                     }
                     withAnimation(.spring(duration: 0.3, bounce: 0.2)) { drag = 0 }
                 }
         )
-        .onAppear { scrolledID = selectedID }
-        .onChange(of: selectedID) { _, id in
-            guard let id, id != scrolledID else { return }
-            withAnimation(.snappy) { scrolledID = id }
-        }
-        .onChange(of: scrolledID) { _, id in
-            guard let id, id != selectedID else { return }
-            selectedID = id
-            onReveal(id)
-        }
-        .sensoryFeedback(.selection, trigger: scrolledID)
+        .sensoryFeedback(.selection, trigger: place.id)
     }
+}
 
-    /// The selected place first, then its nearest neighbors among the places on the map.
-    static func neighborhood(of place: Place, in places: [Place], limit: Int = 12) -> [Place] {
+enum Nearby {
+    /// The place first, then its nearest neighbors within 3 km among the places given.
+    static func places(around place: Place, in places: [Place], limit: Int = 12) -> [Place] {
         let here = place.location
         let others = places
             .filter { $0.id != place.id }
@@ -124,7 +105,7 @@ private struct PlaceMiniCard: View {
         .shadow(color: .black.opacity(0.22), radius: 14, y: 6)
         .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .accessibilityElement(children: .combine)
-        .accessibilityHint(String(localized: "Opens the full story. Swipe sideways for places nearby."))
+        .accessibilityHint(String(localized: "Opens the full story"))
         .accessibilityAddTraits(.isButton)
     }
 }

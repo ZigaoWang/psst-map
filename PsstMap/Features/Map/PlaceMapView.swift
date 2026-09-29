@@ -148,20 +148,10 @@ struct PlaceMapView: UIViewRepresentable {
                 let span = 450 * MKMapPointsPerMeterAtLatitude(annotation.coordinate.latitude)
                 let rect = MKMapRect(x: point.x - span / 2, y: point.y - span / 2, width: span, height: span)
                 // Keep the pin clear of the place card that slides up with it.
-                let bottom: CGFloat = 300
+                let bottom: CGFloat = 260
                 map.setVisibleMapRect(rect, edgePadding: UIEdgeInsets(top: 80, left: 20, bottom: bottom, right: 20),
                                       animated: true)
                 DispatchQueue.main.async { [weak self] in self?.parent.selectedID = id }
-            case .reveal(let id):
-                guard let annotation = annotationsByID[id] else { return }
-                // The part of the map not covered by the top controls or the place cards.
-                let open = map.bounds.inset(by: UIEdgeInsets(top: 130, left: 40, bottom: 320, right: 40))
-                let point = map.convert(annotation.coordinate, toPointTo: map)
-                guard !open.contains(point), open.width > 0, open.height > 0 else { return }
-                let shift = CGPoint(x: point.x - open.midX, y: point.y - open.midY)
-                let center = map.convert(CGPoint(x: map.bounds.midX + shift.x, y: map.bounds.midY + shift.y),
-                                         toCoordinateFrom: map)
-                map.setCenter(center, animated: true)
             case .area(let id):
                 guard let bounds = parent.areaBounds(id) else { return }
                 let sw = MKMapPoint(MapDatum.shared.mapCoordinate(for: .init(latitude: bounds.south, longitude: bounds.west)))
