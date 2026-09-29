@@ -27,8 +27,8 @@ nonisolated enum ContentLibrary {
 
         var errorDescription: String? {
             switch self {
-            case .missing: "The places bundled with the app could not be found."
-            case .corrupt(let detail): "The places could not be read (\(detail))."
+            case .missing: String(localized: "The places bundled with the app could not be found.")
+            case .corrupt(let detail): String(localized: "The places could not be read (\(detail)).")
             }
         }
     }

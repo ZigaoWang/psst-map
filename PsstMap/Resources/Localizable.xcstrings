@@ -1,0 +1,2136 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%@ and %lld more": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ 及另外 %2$lld 个"
+          }
+        }
+      }
+    },
+    "%@ away": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "距离 %@"
+          }
+        }
+      }
+    },
+    "%@ · %@, %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@，%3$@"
+          }
+        }
+      }
+    },
+    "%@, %lld": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@，%2$lld"
+          }
+        }
+      }
+    },
+    "%lld": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld"
+          }
+        }
+      }
+    },
+    "%lld kinds": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 种地点"
+          }
+        }
+      }
+    },
+    "%lld neighborhoods": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个街区"
+          }
+        }
+      }
+    },
+    "%lld places": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 个地点"
+          }
+        }
+      }
+    },
+    "%lld story types": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 类故事"
+          }
+        }
+      }
+    },
+    "(A legend, not a proven fact.)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "（传说，未经证实。）"
+          }
+        }
+      }
+    },
+    "(Disputed: sources disagree.)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "（有争议：各方说法不一。）"
+          }
+        }
+      }
+    },
+    "1 neighborhood": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 个街区"
+          }
+        }
+      }
+    },
+    "1 place": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 个地点"
+          }
+        }
+      }
+    },
+    "3D map of %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 的 3D 地图"
+          }
+        }
+      }
+    },
+    "3D map. Drag to look around.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3D 地图。拖动即可四处查看。"
+          }
+        }
+      }
+    },
+    "A story people tell. It isn't proven, or it's known to be untrue.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "人们口耳相传的故事，未经证实，或已知不实。"
+          }
+        }
+      }
+    },
+    "All of %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "整个%@"
+          }
+        }
+      }
+    },
+    "All stories": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部故事"
+          }
+        }
+      }
+    },
+    "Architecture, art, and signs": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "建筑、艺术与招牌"
+          }
+        }
+      }
+    },
+    "Areas": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "区域"
+          }
+        }
+      }
+    },
+    "Backed by reliable sources.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有可靠来源佐证。"
+          }
+        }
+      }
+    },
+    "Bridge or tunnel": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "桥梁或隧道"
+          }
+        }
+      }
+    },
+    "Bridges, tunnels, and subways": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "桥梁、隧道与地下通道"
+          }
+        }
+      }
+    },
+    "Browse the feed": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浏览推荐"
+          }
+        }
+      }
+    },
+    "Building": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "建筑"
+          }
+        }
+      }
+    },
+    "Can't find your location": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法获取你的位置"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消"
+          }
+        }
+      }
+    },
+    "Check that Location Services are on, then try again.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请确认已打开定位服务，然后重试。"
+          }
+        }
+      }
+    },
+    "Choose a city to see its neighborhoods, or search for any place, person, or story.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择一座城市查看它的街区，或搜索任何地点、人物或故事。"
+          }
+        }
+      }
+    },
+    "Choose a source to open it": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择一个来源即可打开"
+          }
+        }
+      }
+    },
+    "Choose an area": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择区域"
+          }
+        }
+      }
+    },
+    "Choose where the feed shows places from": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择推荐中的地点来自哪里"
+          }
+        }
+      }
+    },
+    "Churches, temples, and mosques": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "教堂、寺庙与清真寺"
+          }
+        }
+      }
+    },
+    "Cities": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "城市"
+          }
+        }
+      }
+    },
+    "Clear search": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除搜索"
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭"
+          }
+        }
+      }
+    },
+    "Couldn't find your location. Showing everywhere instead.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法获取你的位置，改为显示所有地方。"
+          }
+        }
+      }
+    },
+    "Credits": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "致谢"
+          }
+        }
+      }
+    },
+    "Culture": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文化"
+          }
+        }
+      }
+    },
+    "Design": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设计"
+          }
+        }
+      }
+    },
+    "Disputed": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有争议"
+          }
+        }
+      }
+    },
+    "Disputed: sources disagree": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有争议：各方说法不一"
+          }
+        }
+      }
+    },
+    "Docks, rivers, canals, and fountains": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "码头、河流、运河与喷泉"
+          }
+        }
+      }
+    },
+    "Documented by sources you can open from every story.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每个故事都附有可以打开查看的来源。"
+          }
+        }
+      }
+    },
+    "Done": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完成"
+          }
+        }
+      }
+    },
+    "Double-tap for the full story and sources": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连按两下查看完整故事和来源"
+          }
+        }
+      }
+    },
+    "Drag and pinch to explore.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖动和双指缩放来探索。"
+          }
+        }
+      }
+    },
+    "Each place was researched from published sources, and its location comes from Wikidata or OpenStreetMap. If something looks wrong, the sources are one tap away.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每个地点都依据公开发表的资料整理，位置来自 Wikidata 或 OpenStreetMap。如果发现不对，轻点一下就能查看来源。"
+          }
+        }
+      }
+    },
+    "Engineering": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工程"
+          }
+        }
+      }
+    },
+    "Era": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "时代"
+          }
+        }
+      }
+    },
+    "Event": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "事件"
+          }
+        }
+      }
+    },
+    "Every place has a secret. Here are the good ones.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每个地方都有秘密。这里是最有意思的那些。"
+          }
+        }
+      }
+    },
+    "Everything without a label is a documented fact with sources you can check.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有标注的内容都是有据可查的事实，来源可供核对。"
+          }
+        }
+      }
+    },
+    "Everywhere": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有地方"
+          }
+        }
+      }
+    },
+    "Fact": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "事实"
+          }
+        }
+      }
+    },
+    "Facts": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "事实"
+          }
+        }
+      }
+    },
+    "Feed": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "推荐"
+          }
+        }
+      }
+    },
+    "Filter": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "筛选"
+          }
+        }
+      }
+    },
+    "Filtered": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已筛选"
+          }
+        }
+      }
+    },
+    "Find a place, or browse areas": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查找地点或浏览区域"
+          }
+        }
+      }
+    },
+    "Find them on the map": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在地图上找到它们"
+          }
+        }
+      }
+    },
+    "Found on Psst": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发现于 Psst"
+          }
+        }
+      }
+    },
+    "Full-screen map": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全屏地图"
+          }
+        }
+      }
+    },
+    "Getting search ready": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在准备搜索"
+          }
+        }
+      }
+    },
+    "Help choose new areas": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "帮助选择新区域"
+          }
+        }
+      }
+    },
+    "Hidden": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已隐藏"
+          }
+        }
+      }
+    },
+    "Hidden detail": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐藏细节"
+          }
+        }
+      }
+    },
+    "History": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "历史"
+          }
+        }
+      }
+    },
+    "How it was built and works": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "如何建造与运作"
+          }
+        }
+      }
+    },
+    "How to read it": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "如何阅读"
+          }
+        }
+      }
+    },
+    "It's offensive or inappropriate": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "内容冒犯或不当"
+          }
+        }
+      }
+    },
+    "It's out of date": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "内容已过时"
+          }
+        }
+      }
+    },
+    "Labels on stories": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "故事标签"
+          }
+        }
+      }
+    },
+    "Legend": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "传说"
+          }
+        }
+      }
+    },
+    "Legend, not a proven fact": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "传说，未经证实"
+          }
+        }
+      }
+    },
+    "Legend: an unproven story": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "传说：未经证实的故事"
+          }
+        }
+      }
+    },
+    "Legends": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "传说"
+          }
+        }
+      }
+    },
+    "Legends are labeled": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "传说都有标注"
+          }
+        }
+      }
+    },
+    "Loading picture": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在加载图片"
+          }
+        }
+      }
+    },
+    "Loading places": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在加载地点"
+          }
+        }
+      }
+    },
+    "Location data from Wikidata (CC0)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "位置数据来自 Wikidata（CC0）"
+          }
+        }
+      }
+    },
+    "Location data © OpenStreetMap contributors (ODbL)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "位置数据 © OpenStreetMap 贡献者（ODbL）"
+          }
+        }
+      }
+    },
+    "Location from Wikidata": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "位置来自 Wikidata"
+          }
+        }
+      }
+    },
+    "Location is off for Psst": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Psst 的定位已关闭"
+          }
+        }
+      }
+    },
+    "Location is off for Psst. Turn it on in Settings to see what's around you.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Psst 的定位已关闭。在“设置”中打开即可查看你周围有什么。"
+          }
+        }
+      }
+    },
+    "Location © OpenStreetMap contributors": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "位置 © OpenStreetMap 贡献者"
+          }
+        }
+      }
+    },
+    "Look Around": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "四处看看"
+          }
+        }
+      }
+    },
+    "Map": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "地图"
+          }
+        }
+      }
+    },
+    "Maps and street-level imagery by Apple Maps. In mainland China, map data is licensed by Apple from local providers.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "地图和街景图像由 Apple 地图提供。在中国大陆，地图数据由 Apple 从本地供应商获得授权。"
+          }
+        }
+      }
+    },
+    "Monument": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "纪念物"
+          }
+        }
+      }
+    },
+    "More": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更多"
+          }
+        }
+      }
+    },
+    "Movement": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运动"
+          }
+        }
+      }
+    },
+    "Museums, theaters, and markets": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "博物馆、剧院与市场"
+          }
+        }
+      }
+    },
+    "Music, film, TV, books, and games": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音乐、电影、电视、书籍与游戏"
+          }
+        }
+      }
+    },
+    "Name origin": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名字由来"
+          }
+        }
+      }
+    },
+    "Near me": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我附近"
+          }
+        }
+      }
+    },
+    "Nearby": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "附近"
+          }
+        }
+      }
+    },
+    "Neighborhoods": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "街区"
+          }
+        }
+      }
+    },
+    "No picture right now": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂时没有图片"
+          }
+        }
+      }
+    },
+    "No places here yet": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这里还没有地点"
+          }
+        }
+      }
+    },
+    "Not now": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以后再说"
+          }
+        }
+      }
+    },
+    "Nothing called “%@” yet": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有叫“%@”的内容"
+          }
+        }
+      }
+    },
+    "Nothing near you yet": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你附近还没有地点"
+          }
+        }
+      }
+    },
+    "Nothing near you yet, so these are the closest places Psst knows.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你附近还没有地点，这些是 Psst 已知离你最近的地方。"
+          }
+        }
+      }
+    },
+    "Nothing saved yet": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有收藏"
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "好"
+          }
+        }
+      }
+    },
+    "Odd rules, customs, and records": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "奇特的规矩、习俗与纪录"
+          }
+        }
+      }
+    },
+    "Offices, homes, hotels, shops, and pubs": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "办公楼、住宅、酒店、商店与酒吧"
+          }
+        }
+      }
+    },
+    "On map": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在地图上"
+          }
+        }
+      }
+    },
+    "Open Database License": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开放数据库许可证"
+          }
+        }
+      }
+    },
+    "Open Settings": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开设置"
+          }
+        }
+      }
+    },
+    "Opens the full story": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开完整故事"
+          }
+        }
+      }
+    },
+    "Or just swipe": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "或者直接滑动"
+          }
+        }
+      }
+    },
+    "Other places": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他地点"
+          }
+        }
+      }
+    },
+    "Park or garden": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "公园或花园"
+          }
+        }
+      }
+    },
+    "Parks, gardens, and squares": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "公园、花园与广场"
+          }
+        }
+      }
+    },
+    "People": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "人物"
+          }
+        }
+      }
+    },
+    "Person or group": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "人物或团体"
+          }
+        }
+      }
+    },
+    "Pin colors on the map follow these kinds.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "地图上图钉的颜色对应这些类别。"
+          }
+        }
+      }
+    },
+    "Place": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "地点"
+          }
+        }
+      }
+    },
+    "Place of worship": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "宗教场所"
+          }
+        }
+      }
+    },
+    "Places": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "地点"
+          }
+        }
+      }
+    },
+    "Places, neighborhoods, people, stories": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "地点、街区、人物、故事"
+          }
+        }
+      }
+    },
+    "Pop culture": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "流行文化"
+          }
+        }
+      }
+    },
+    "Privacy": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐私"
+          }
+        }
+      }
+    },
+    "Privacy policy": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐私政策"
+          }
+        }
+      }
+    },
+    "Psst": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Psst"
+          }
+        }
+      }
+    },
+    "Psst doesn't cover where you are right now. Pick an area to explore instead.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Psst 暂时还没覆盖你所在的地方。选一个区域去探索吧。"
+          }
+        }
+      }
+    },
+    "Psst.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Psst."
+          }
+        }
+      }
+    },
+    "Quirk": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "趣闻"
+          }
+        }
+      }
+    },
+    "Read more": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "阅读更多"
+          }
+        }
+      }
+    },
+    "Reliable sources disagree about this.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可靠来源对此说法不一。"
+          }
+        }
+      }
+    },
+    "Remove": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除"
+          }
+        }
+      }
+    },
+    "Remove from saved": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从收藏中移除"
+          }
+        }
+      }
+    },
+    "Report a problem": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "报告问题"
+          }
+        }
+      }
+    },
+    "Reports go to the people who check Psst's stories. They aren't linked to you. Please don't include personal information.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "报告会发送给负责核查 Psst 故事的人，不会与你关联。请不要填写个人信息。"
+          }
+        }
+      }
+    },
+    "Save": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏"
+          }
+        }
+      }
+    },
+    "Saved": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收藏"
+          }
+        }
+      }
+    },
+    "Saved. It will send when you're back online.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已保存，联网后会自动发送。"
+          }
+        }
+      }
+    },
+    "Search": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索"
+          }
+        }
+      }
+    },
+    "Search places": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索地点"
+          }
+        }
+      }
+    },
+    "Send": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发送"
+          }
+        }
+      }
+    },
+    "Settings": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设置"
+          }
+        }
+      }
+    },
+    "Share": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分享"
+          }
+        }
+      }
+    },
+    "Show all": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部显示"
+          }
+        }
+      }
+    },
+    "Show everywhere": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示所有地方"
+          }
+        }
+      }
+    },
+    "Show me anyway": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仍然显示"
+          }
+        }
+      }
+    },
+    "Show my location": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示我的位置"
+          }
+        }
+      }
+    },
+    "Show on map": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在地图上显示"
+          }
+        }
+      }
+    },
+    "Show original": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示原文"
+          }
+        }
+      }
+    },
+    "Show places from": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示地点来自"
+          }
+        }
+      }
+    },
+    "Showing places from %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在显示 %@ 的地点"
+          }
+        }
+      }
+    },
+    "Showing results for “%@”": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在显示“%@”的结果"
+          }
+        }
+      }
+    },
+    "Shown": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已显示"
+          }
+        }
+      }
+    },
+    "Shows every kind of place again": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新显示所有类别的地点"
+          }
+        }
+      }
+    },
+    "Shows every place connected by it": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示与之相关的所有地点"
+          }
+        }
+      }
+    },
+    "Shows only these. Choose more to add them.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只显示这些。选择更多即可添加。"
+          }
+        }
+      }
+    },
+    "Shows what's surprising about this place": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示这个地方的意外之处"
+          }
+        }
+      }
+    },
+    "Some stories are too good to leave out and too shaky to call facts. You'll always know which is which.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有些故事精彩到舍不得删，又站不住脚算不上事实。你总能分清哪些是哪些。"
+          }
+        }
+      }
+    },
+    "Something else": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他问题"
+          }
+        }
+      }
+    },
+    "Something in it is wrong": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "内容有误"
+          }
+        }
+      }
+    },
+    "Something went quiet": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出了点问题"
+          }
+        }
+      }
+    },
+    "Sources: %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来源：%@"
+          }
+        }
+      }
+    },
+    "Spotted something wrong? Every story links to its sources.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发现错误？每个故事都附有来源链接。"
+          }
+        }
+      }
+    },
+    "Start again": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新开始"
+          }
+        }
+      }
+    },
+    "Start exploring": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始探索"
+          }
+        }
+      }
+    },
+    "Stations, stops, and piers": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "车站、站点与码头"
+          }
+        }
+      }
+    },
+    "Statues, plaques, and markers": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "雕像、铭牌与标记"
+          }
+        }
+      }
+    },
+    "Stories": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "故事"
+          }
+        }
+      }
+    },
+    "Stories are written in English. When a translation into %@ is available on this device, it's shown instead, with a way back to the original.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "故事以英文撰写。如果此设备可以翻译成%@，就会显示译文，也可以随时切回原文。"
+          }
+        }
+      }
+    },
+    "Stories people tell that aren't proven, or are known to be untrue. They're always labeled.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "人们流传的故事，未经证实或已知不实。它们都有标注。"
+          }
+        }
+      }
+    },
+    "Stories updated": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "故事更新于"
+          }
+        }
+      }
+    },
+    "Story": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "故事"
+          }
+        }
+      }
+    },
+    "Street": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "街道"
+          }
+        }
+      }
+    },
+    "Streets, alleys, corners, and roundabouts": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "街道、小巷、街角与环岛"
+          }
+        }
+      }
+    },
+    "Tap a pin to see a place and what's surprising about it.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "轻点图钉，查看地点和它的意外之处。"
+          }
+        }
+      }
+    },
+    "Tap one to see only those stories, then tap more to add them.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "轻点一项只看这类故事，再点其他项可以添加。"
+          }
+        }
+      }
+    },
+    "Tell us more (optional)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "补充说明（可选）"
+          }
+        }
+      }
+    },
+    "Thanks. We'll take a look.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "谢谢，我们会去核实。"
+          }
+        }
+      }
+    },
+    "That's everything": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "就这些了"
+          }
+        }
+      }
+    },
+    "The feed brings you one place at a time, from everywhere Psst knows.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "推荐每次为你带来一个地点，来自 Psst 知道的所有地方。"
+          }
+        }
+      }
+    },
+    "The pin is in the wrong place": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图钉位置不对"
+          }
+        }
+      }
+    },
+    "The places bundled with the app could not be found.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "找不到 App 自带的地点数据。"
+          }
+        }
+      }
+    },
+    "The places could not be read (%@).": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法读取地点数据（%@）。"
+          }
+        }
+      }
+    },
+    "The stories behind the places people walk past. Every place here has at least one thing about it worth leaning over to tell a friend.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "人们每天路过的地方背后的故事。这里的每个地点，都至少有一件事值得你凑过去告诉朋友。"
+          }
+        }
+      }
+    },
+    "Theme": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "主题"
+          }
+        }
+      }
+    },
+    "Things people walk past": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "人们路过的东西"
+          }
+        }
+      }
+    },
+    "Thread: %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "线索：%@"
+          }
+        }
+      }
+    },
+    "Threads": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "线索"
+          }
+        }
+      }
+    },
+    "Translate": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻译"
+          }
+        }
+      }
+    },
+    "Translate stories automatically": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自动翻译故事"
+          }
+        }
+      }
+    },
+    "Translated from English": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "译自英文"
+          }
+        }
+      }
+    },
+    "Translates into %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻译成%@"
+          }
+        }
+      }
+    },
+    "Transport": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "交通"
+          }
+        }
+      }
+    },
+    "Try a street, a station, a person, or a word from a story.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "试试街道、车站、人物，或故事里的一个词。"
+          }
+        }
+      }
+    },
+    "Try again": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重试"
+          }
+        }
+      }
+    },
+    "Try again. If it keeps happening, reinstalling Psst will fix it.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请重试。如果一直出现，重新安装 Psst 即可解决。"
+          }
+        }
+      }
+    },
+    "Try another area, or look everywhere.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "换个区域，或查看所有地方。"
+          }
+        }
+      }
+    },
+    "Turn it on in Settings to see the places around you.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在“设置”中打开，即可查看你周围的地点。"
+          }
+        }
+      }
+    },
+    "Version": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "版本"
+          }
+        }
+      }
+    },
+    "Walk here": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "步行前往"
+          }
+        }
+      }
+    },
+    "Water": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "水域"
+          }
+        }
+      }
+    },
+    "What used to be here": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这里曾经是什么"
+          }
+        }
+      }
+    },
+    "What's inside": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "包含内容"
+          }
+        }
+      }
+    },
+    "What's the problem?": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有什么问题？"
+          }
+        }
+      }
+    },
+    "When a place surprises you, tap Save and it will wait for you here.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "遇到让你惊喜的地方，轻点“收藏”，它就会在这里等你。"
+          }
+        }
+      }
+    },
+    "When you look at a part of the map with no stories yet, Psst sends the rough middle of that area (to about 10 km), and nothing else, so we know where to research next. Your saved places, history, and location stay on this device.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当你查看地图上还没有故事的区域时，Psst 只会发送该区域的大致中心（精确到约 10 公里），不发送其他任何信息，好让我们知道下一步去哪里调研。你的收藏、浏览记录和位置都只保存在此设备上。"
+          }
+        }
+      }
+    },
+    "Where names came from": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名字从何而来"
+          }
+        }
+      }
+    },
+    "Where reliable sources disagree. The full story explains how.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可靠来源说法不一的地方。完整故事会说明分歧所在。"
+          }
+        }
+      }
+    },
+    "Who lived or worked here": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "谁曾在这里生活或工作"
+          }
+        }
+      }
+    },
+    "You've been through all %lld places in %@. More are on the way.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你已经看完了%2$@的全部 %1$lld 个地点。更多内容即将到来。"
+          }
+        }
+      }
+    },
+    "Zooms in to show them": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放大以显示它们"
+          }
+        }
+      }
+    },
+    "· %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %@"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
