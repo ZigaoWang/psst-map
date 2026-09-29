@@ -1821,6 +1821,16 @@
         }
       }
     },
+    "That's the most reports for one day. Please try again tomorrow.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今天的报告次数已达上限，请明天再试。"
+          }
+        }
+      }
+    },
     "The feed brings you one place at a time, from everywhere Psst knows.": {
       "localizations": {
         "zh-Hans": {
@@ -2081,12 +2091,12 @@
         }
       }
     },
-    "When you look at a part of the map with no stories yet, Psst sends the rough middle of that area (to about 10 km), and nothing else, so we know where to research next. Your saved places, history, and location stay on this device.": {
+    "When you look at a city-sized part of the map with no stories yet, Psst sends which area it was (a hexagon of about 250 km²) and nothing else, so we know where to research next. It never sends where you are. Your saved places, history, and location stay on this device.": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "当你查看地图上还没有故事的区域时，Psst 只会发送该区域的大致中心（精确到约 10 公里），不发送其他任何信息，好让我们知道下一步去哪里调研。你的收藏、浏览记录和位置都只保存在此设备上。"
+            "value": "当你查看地图上还没有故事的城市大小区域时，Psst 只会发送是哪个区域（约 250 平方公里的六边形），不发送其他任何信息，好让我们知道下一步去哪里调研。它绝不会发送你所在的位置。你的收藏、浏览记录和位置都只保存在此设备上。"
           }
         }
       }
@@ -2117,6 +2127,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "谁曾在这里生活或工作"
+          }
+        }
+      }
+    },
+    "You've already reported this story. Thanks, we have it.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你已经报告过这个故事了。谢谢，我们已收到。"
           }
         }
       }

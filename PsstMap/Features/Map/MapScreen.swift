@@ -227,9 +227,17 @@ struct MapScreen: View {
         } else {
             visibleAreaName = nearestCity(to: center)?.displayName
         }
-        // A city-sized view with nothing in it: tell us, anonymously, that someone looked here.
-        if visible.isEmpty, (0.03...0.8).contains(span.latitudeDelta), app.loadState == .loaded {
-            DemandSignal.send(center: region.center)
+        // A city-sized view with no places at all (whatever the filters): tell us, anonymously, which
+        // coarse cell someone looked at. Never sent while the person's own location is in view.
+        if app.loadState == .loaded {
+            let hasPlaces = app.catalog.places.contains { place in
+                abs(place.coordinate.latitude - region.center.latitude) <= span.latitudeDelta / 2
+                    && abs(place.coordinate.longitude - region.center.longitude) <= span.longitudeDelta / 2
+            }
+            if let cell = DemandSignal.cell(center: region.center, span: span, hasPlaces: hasPlaces,
+                                            userLocation: app.location.location?.coordinate) {
+                DemandSignal.send(cell: cell)
+            }
         }
     }
 

@@ -190,7 +190,9 @@ struct ReportSheet: View {
     @State private var message = ""
     @State private var state: SendState = .editing
 
-    enum SendState { case editing, sending, sent, queued }
+    enum SendState { case editing, sending, sent, queued, alreadyReported, dailyLimit }
+
+    private var isFinished: Bool { state != .editing && state != .sending }
 
     var body: some View {
         NavigationStack {
@@ -228,11 +230,20 @@ struct ReportSheet: View {
                 } footer: {
                     Text("Reports go to the people who check Psst's stories. They aren't linked to you. Please don't include personal information.")
                 }
-                if state == .sent || state == .queued {
+                if isFinished {
                     Section {
-                        Label(state == .sent ? String(localized: "Thanks. We'll take a look.")
-                                             : String(localized: "Saved. It will send when you're back online."),
-                              systemImage: state == .sent ? "checkmark.circle.fill" : "clock")
+                        switch state {
+                        case .sent:
+                            Label(String(localized: "Thanks. We'll take a look."), systemImage: "checkmark.circle.fill")
+                        case .queued:
+                            Label(String(localized: "Saved. It will send when you're back online."), systemImage: "clock")
+                        case .alreadyReported:
+                            Label(String(localized: "You've already reported this story. Thanks, we have it."),
+                                  systemImage: "checkmark.circle")
+                        default:
+                            Label(String(localized: "That's the most reports for one day. Please try again tomorrow."),
+                                  systemImage: "hourglass")
+                        }
                     }
                 }
             }
@@ -240,7 +251,7 @@ struct ReportSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(state == .sent || state == .queued ? String(localized: "Done") : String(localized: "Cancel")) {
+                    Button(isFinished ? String(localized: "Done") : String(localized: "Cancel")) {
                         dismiss()
                     }
                 }
@@ -259,8 +270,12 @@ struct ReportSheet: View {
         guard let reason else { return }
         state = .sending
         Task {
-            let sent = await app.reports.submit(factID: fact.id, reason: reason, message: message)
-            state = sent ? .sent : .queued
+            state = switch await app.reports.submit(factID: fact.id, reason: reason, message: message) {
+            case .sent: .sent
+            case .queued: .queued
+            case .alreadyReported: .alreadyReported
+            case .dailyLimit: .dailyLimit
+            }
         }
     }
 }

@@ -1,5 +1,7 @@
 import CoreLocation
 import Foundation
+import H3
+import MapKit
 import Observation
 
 /// The two things the app ever sends: problem reports and "no stories here yet" signals.
@@ -49,24 +51,39 @@ final class ReportOutbox {
         let appVersion: String
     }
 
+    enum Outcome: Equatable {
+        case sent
+        /// Saved on the device; it goes out when the phone is back online.
+        case queued
+        case alreadyReported
+        case dailyLimit
+    }
+
     private(set) var pending: [Report]
     private static let key = "reports.pending"
+    /// One report per story per device (remembered for 90 days), and at most 5 reports a day.
+    nonisolated static let limit = SendLimit(storeKey: "reports.sent", perDay: 5, window: 90)
 
     init() {
         let data = UserDefaults.standard.data(forKey: Self.key)
         pending = data.flatMap { try? JSONDecoder().decode([Report].self, from: $0) } ?? []
     }
 
-    /// Queues a report and tries to send everything waiting. Returns true if this one went out now.
+    /// Queues a report and tries to send everything waiting.
     @discardableResult
-    func submit(factID: String, reason: Reason, message: String) async -> Bool {
+    func submit(factID: String, reason: Reason, message: String) async -> Outcome {
+        switch Self.limit.take(factID) {
+        case .alreadySent: return .alreadyReported
+        case .dailyLimit: return .dailyLimit
+        case .allowed: break
+        }
         let report = Report(factID: factID, reason: reason,
                             message: String(message.trimmingCharacters(in: .whitespacesAndNewlines).prefix(1000)),
                             appVersion: PsstAPI.appVersion)
         pending.append(report)
         save()
         await flush()
-        return !pending.contains(report)
+        return pending.contains(report) ? .queued : .sent
     }
 
     func flush() async {
@@ -87,30 +104,36 @@ final class ReportOutbox {
     }
 }
 
-/// "No stories here yet" signals that help choose where to research next. Off when the person turns off
-/// "Help choose new areas". Sends only a coordinate rounded to a tenth of a degree (about 10 km); the
-/// server keeps only a daily count for a much larger area.
+/// "No stories here yet" signals, so research can go where people look. Sends one thing: the id of the
+/// H3 cell (resolution 5, about 250 km²) at the middle of an empty, city-sized map view. Never the
+/// person's location: nothing is sent while their own position is inside the view. Off when they turn
+/// off "Help choose new areas".
 enum DemandSignal {
     static let settingKey = "privacy.helpChooseAreas"
-    private static let sentKey = "demand.sent"
+    nonisolated static let resolution = 5
+    /// One signal per cell per day, and at most 10 cells a day, so one device can't skew the counts.
+    nonisolated static let limit = SendLimit(storeKey: "demand.sent", perDay: 10, window: 1)
 
     static var isEnabled: Bool {
         UserDefaults.standard.object(forKey: settingKey) as? Bool ?? true
     }
 
-    static func send(center: CLLocationCoordinate2D) {
-        guard isEnabled else { return }
-        let lat = (center.latitude * 10).rounded() / 10
-        let lon = (center.longitude * 10).rounded() / 10
-        let key = "\(lat),\(lon)"
-        let today = ISO8601DateFormatter.string(from: Date(), timeZone: .gmt, formatOptions: [.withFullDate])
-        var sent = UserDefaults.standard.dictionary(forKey: sentKey) as? [String: String] ?? [:]
-        guard sent[key] != today else { return }
-        sent = sent.filter { $0.value == today }
-        sent[key] = today
-        UserDefaults.standard.set(sent, forKey: sentKey)
+    /// The cell to report for a view, or nil when this view shouldn't be reported.
+    nonisolated static func cell(center: CLLocationCoordinate2D, span: MKCoordinateSpan, hasPlaces: Bool,
+                                 userLocation: CLLocationCoordinate2D?) -> String? {
+        guard !hasPlaces, (0.03...0.8).contains(span.latitudeDelta) else { return nil }
+        if let user = userLocation,
+           abs(user.latitude - center.latitude) <= span.latitudeDelta / 2,
+           abs(user.longitude - center.longitude) <= span.longitudeDelta / 2 {
+            return nil
+        }
+        return H3.cell(latitude: center.latitude, longitude: center.longitude, resolution: resolution)
+    }
+
+    static func send(cell: String) {
+        guard isEnabled, limit.take(cell) == .allowed else { return }
         Task.detached(priority: .background) {
-            try? await PsstAPI.post("demand", body: ["lat": String(lat), "lon": String(lon)])
+            try? await PsstAPI.post("demand", body: ["cell": cell])
         }
     }
 }

@@ -45,7 +45,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Privacy")
                 } footer: {
-                    Text("When you look at a part of the map with no stories yet, Psst sends the rough middle of that area (to about 10 km), and nothing else, so we know where to research next. Your saved places, history, and location stay on this device.")
+                    Text("When you look at a city-sized part of the map with no stories yet, Psst sends which area it was (a hexagon of about 250 km²) and nothing else, so we know where to research next. It never sends where you are. Your saved places, history, and location stay on this device.")
                 }
 
                 Section {
