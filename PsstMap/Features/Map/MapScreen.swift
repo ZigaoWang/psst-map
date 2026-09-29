@@ -202,6 +202,8 @@ struct MapScreen: View {
         }
         .scrollIndicators(.hidden)
         .modifier(NoScrollEdgeEffect())
+        // Without this the row clips its buttons' shadows into a hard-edged band across the map.
+        .scrollClipDisabled()
         .sensoryFeedback(.selection, trigger: app.shownCategories)
     }
 
