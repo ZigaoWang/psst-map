@@ -21,7 +21,7 @@ struct FilterSheet: View {
                         withAnimation(.snappy) { app.shownCategories = [] }
                     }
                 } footer: {
-                    Text("Tap one to see only those stories. Tap more to add them.")
+                    Text("Tap one to see only those stories, then tap more to add them.")
                 }
 
                 Section {
@@ -104,10 +104,6 @@ private struct FilterHeader: View {
                 Button("Show all", action: onShowAll)
                     .font(.subheadline.weight(.semibold))
                     .textCase(nil)
-            } else {
-                Text("All shown")
-                    .font(.subheadline)
-                    .textCase(nil)
             }
         }
     }
@@ -140,9 +136,10 @@ private struct FilterRow<Icon: View>: View {
                 Text("\(count)")
                     .font(.subheadline.monospacedDigit())
                     .foregroundStyle(.secondary)
-                Image(systemName: state == .chosen ? "checkmark.circle.fill" : "circle")
+                // Everything is shown until something is chosen, so every row carries a check then.
+                Image(systemName: state == .off ? "circle" : "checkmark.circle.fill")
                     .font(.title3)
-                    .foregroundStyle(state == .chosen ? color : Color.secondary.opacity(state == .all ? 0.25 : 0.5))
+                    .foregroundStyle(state == .off ? Color.secondary.opacity(0.5) : color)
                     .contentTransition(.symbolEffect(.replace))
             }
             .contentShape(Rectangle())
