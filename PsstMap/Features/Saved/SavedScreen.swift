@@ -1,66 +1,88 @@
 import SwiftUI
 
+/// The places someone has kept, as a grid of pictures, newest first.
 struct SavedScreen: View {
     @Environment(AppModel.self) private var app
     @State private var detailPlace: Place?
     @State private var showsAbout = false
+    @Namespace private var zoom
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     private var savedPlaces: [Place] {
         app.saved.ids.compactMap { app.catalog.place(id: $0) }
     }
 
     var body: some View {
-        NavigationStack {
-            Group {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                header
                 if savedPlaces.isEmpty {
                     empty
                 } else {
-                    list
+                    grid
                 }
             }
-            .navigationTitle("Saved")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showsAbout = true
-                    } label: {
-                        Image(systemName: "info.circle")
-                    }
-                    .accessibilityLabel(String(localized: "About Psst"))
-                }
-            }
-            .sheet(item: $detailPlace) { place in
-                SpotDetailView(place: place)
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.visible)
-            }
-            .sheet(isPresented: $showsAbout) {
-                AboutView()
-            }
-            #if DEBUG
-            .onAppear { if UserDefaults.standard.string(forKey: "debug.sheet") == "about" { showsAbout = true } }
-            #endif
+            .padding(.horizontal, 16)
+            .padding(.bottom, 32)
         }
+        .background(Theme.screenBackground)
+        .placePresentation($detailPlace, namespace: zoom)
+        .sheet(isPresented: $showsAbout) {
+            AboutView()
+        }
+        #if DEBUG
+        .onAppear { if UserDefaults.standard.string(forKey: "debug.sheet") == "about" { showsAbout = true } }
+        #endif
     }
 
-    private var list: some View {
-        List {
+    /// Title and the About button on one line, so the button never pushes the title down.
+    private var header: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Saved")
+                    .font(.largeTitle.weight(.bold))
+                    .accessibilityAddTraits(.isHeader)
+                if !savedPlaces.isEmpty {
+                    Text(savedPlaces.count == 1 ? "1 place" : "\(savedPlaces.count) places")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+            Button {
+                showsAbout = true
+            } label: {
+                Image(systemName: "info")
+                    .font(.body.weight(.semibold))
+                    .frame(width: 20, height: 20)
+            }
+            .floatingButtonStyle(circle: true)
+            .foregroundStyle(.primary)
+            .accessibilityLabel(String(localized: "About Psst"))
+            .padding(.top, 4)
+        }
+        .padding(.top, 12)
+    }
+
+    private var columns: [GridItem] {
+        let count = typeSize.isAccessibilitySize ? 1 : 2
+        return Array(repeating: GridItem(.flexible(), spacing: 12, alignment: .top), count: count)
+    }
+
+    private var grid: some View {
+        LazyVGrid(columns: columns, spacing: 16) {
             ForEach(savedPlaces) { place in
                 Button { detailPlace = place } label: {
-                    SavedRow(place: place)
+                    SavedCard(place: place)
                 }
-                .buttonStyle(.plain)
-                .swipeActions {
-                    Button(role: .destructive) {
-                        withAnimation { app.saved.remove(place.id) }
-                    } label: {
-                        Label("Remove", systemImage: "bookmark.slash")
-                    }
-                }
+                .buttonStyle(PressableButtonStyle())
+                .placeZoomSource(place.id, in: zoom)
                 .contextMenu {
                     Button { app.showOnMap(place) } label: { Label("Show on map", systemImage: "map") }
                     ShareLink(item: ShareText.text(for: place)) { Label("Share", systemImage: "square.and.arrow.up") }
-                    Button(role: .destructive) { app.saved.remove(place.id) } label: {
+                    Button(role: .destructive) {
+                        withAnimation(.snappy) { app.saved.remove(place.id) }
+                    } label: {
                         Label("Remove", systemImage: "bookmark.slash")
                     }
                 }
@@ -68,7 +90,7 @@ struct SavedScreen: View {
                 .accessibilityAction(named: String(localized: "Show on map")) { app.showOnMap(place) }
             }
         }
-        .listStyle(.insetGrouped)
+        .animation(.snappy, value: app.saved.ids)
     }
 
     private var empty: some View {
@@ -91,35 +113,48 @@ struct SavedScreen: View {
                     .padding(.vertical, 4)
             }
             .buttonStyle(.borderedProminent)
+            .tint(.primary)
             .padding(.top, 6)
         }
-        .padding(32)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.screenBackground)
+        .padding(.horizontal, 24)
+        .padding(.top, 120)
+        .frame(maxWidth: .infinity)
     }
 }
 
-private struct SavedRow: View {
+/// A saved place: its picture, its name, and the story that made it worth keeping.
+private struct SavedCard: View {
     let place: Place
     @Environment(AppModel.self) private var app
 
     var body: some View {
-        HStack(alignment: .top, spacing: 14) {
-            KindTile(kind: place.spot.kind, size: 44)
-            VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 8) {
+            PlaceThumbnail(place: place)
+                .aspectRatio(4 / 5, contentMode: .fit)
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .overlay(alignment: .topTrailing) {
+                    Circle()
+                        .fill(place.spot.kind.color)
+                        .frame(width: 10, height: 10)
+                        .overlay(Circle().stroke(.white, lineWidth: 2))
+                        .padding(10)
+                }
+            VStack(alignment: .leading, spacing: 2) {
                 Text(place.name)
-                    .font(.body.weight(.semibold))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
                 Text(app.leadFact(for: place).headline)
-                    .font(.subheadline)
-                    .foregroundStyle(.primary.opacity(0.8))
-                Text("\(place.areaName), \(place.city)")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+                    .lineLimit(2)
             }
-            Spacer(minLength: 0)
+            .multilineTextAlignment(.leading)
+            .padding(.horizontal, 2)
         }
-        .padding(.vertical, 4)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
+        .accessibilityHint(String(localized: "Opens the full story"))
     }
 }
