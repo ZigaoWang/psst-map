@@ -1,14 +1,18 @@
+import NaturalLanguage
 import SwiftUI
+@preconcurrency import Translation
 
-/// Finds places by name (English or local), area, city, or anything in their stories, and lists the
-/// areas to browse when nothing has been typed yet.
+/// Search, and browsing by city and neighborhood when nothing has been typed.
 struct SearchSheet: View {
     let onPlace: (Place) -> Void
-    let onArea: (String) -> Void
+    let onRegion: (CityRecord.Bounds) -> Void
+    let onTag: (Tag) -> Void
 
     @Environment(AppModel.self) private var app
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
+    @State private var translated: (query: String, english: String)?
+    @State private var translationRequest: String?
     @FocusState private var isFieldFocused: Bool
 
     var body: some View {
@@ -25,13 +29,23 @@ struct SearchSheet: View {
             .safeAreaInset(edge: .top, spacing: 0) { searchField }
             .navigationTitle("Search")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(for: City.self) { city in
+                CityNeighborhoods(city: city, onRegion: onRegion)
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { dismiss() }
                 }
             }
+            .modifier(QueryTranslation(request: $translationRequest) { original, english in
+                if original == trimmedQuery { translated = (original, english) }
+            })
         }
         .onAppear { isFieldFocused = true }
+        .onChange(of: trimmedQuery) { _, _ in
+            translated = nil
+            requestTranslationIfNeeded()
+        }
     }
 
     private var trimmedQuery: String { query.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -40,13 +54,13 @@ struct SearchSheet: View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
-            TextField("Places, areas, or stories", text: $query)
+            TextField("Places, neighborhoods, people, stories", text: $query)
                 .focused($isFieldFocused)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .submitLabel(.search)
                 .onSubmit {
-                    if let first = matches.first { onPlace(first.place) }
+                    if let first = currentResults?.places.first { onPlace(first.place) }
                 }
             if !query.isEmpty {
                 Button {
@@ -71,47 +85,96 @@ struct SearchSheet: View {
 
     @ViewBuilder
     private var browse: some View {
-        ForEach(app.catalog.cities) { city in
-            Section {
-                ForEach(city.areas) { area in
-                    Button { onArea(area.id) } label: { AreaRow(area: area) }
-                        .buttonStyle(.plain)
+        Section {
+            ForEach(app.catalog.cities) { city in
+                NavigationLink(value: city) {
+                    AreaRow(title: localized(city.name, city.names), subtitle: nil, count: city.placeCount)
                 }
-            } header: {
-                Text(city.name)
             }
+        } header: {
+            Text("Cities")
+        } footer: {
+            Text("Choose a city to see its neighborhoods, or search for any place, person, or story.")
         }
     }
 
     // MARK: Results
 
+    private var currentResults: SearchIndex.Results? {
+        guard let index = app.searchIndex else { return nil }
+        let direct = index.search(trimmedQuery)
+        if direct.isEmpty, let translated, translated.query == trimmedQuery {
+            return index.search(translated.english)
+        }
+        return direct
+    }
+
     @ViewBuilder
     private var results: some View {
-        let places = matches
-        let areas = matchingAreas
-        if places.isEmpty && areas.isEmpty {
+        if let results = currentResults {
+            if results.isEmpty {
+                Section {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Nothing called \u{201C}\(trimmedQuery)\u{201D} yet")
+                            .font(.headline)
+                        Text("Try a street, a station, a person, or a word from a story.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 6)
+                }
+            } else {
+                if let translated, translated.query == trimmedQuery, app.searchIndex?.search(trimmedQuery).isEmpty == true {
+                    Section {
+                        Label("Showing results for \u{201C}\(translated.english)\u{201D}", systemImage: "translate")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                resultSections(results)
+            }
+        } else {
             Section {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Nothing called \u{201C}\(trimmedQuery)\u{201D} yet")
-                        .font(.headline)
-                    Text("Try a street, a station, or a word from a story.")
-                        .font(.subheadline)
+                HStack(spacing: 10) {
+                    ProgressView()
+                    Text("Getting search ready")
                         .foregroundStyle(.secondary)
                 }
-                .padding(.vertical, 6)
             }
         }
-        if !areas.isEmpty {
+    }
+
+    @ViewBuilder
+    private func resultSections(_ results: SearchIndex.Results) -> some View {
+        if !results.cities.isEmpty || !results.neighborhoods.isEmpty {
             Section("Areas") {
-                ForEach(areas) { area in
-                    Button { onArea(area.id) } label: { AreaRow(area: area) }
+                ForEach(results.cities) { city in
+                    Button { onRegion(city.bounds) } label: {
+                        AreaRow(title: localized(city.name, city.names), subtitle: nil, count: city.placeCount)
+                    }
+                    .buttonStyle(.plain)
+                }
+                ForEach(results.neighborhoods.prefix(12)) { hood in
+                    Button { onRegion(hood.bounds) } label: {
+                        AreaRow(title: localized(hood.name, hood.names),
+                                subtitle: app.catalog.city(id: hood.cityID)?.name, count: hood.placeCount)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        if !results.tags.isEmpty {
+            Section("Threads") {
+                ForEach(results.tags.prefix(8)) { tag in
+                    Button { onTag(tag) } label: { TagRow(tag: tag) }
                         .buttonStyle(.plain)
                 }
             }
         }
-        if !places.isEmpty {
-            Section(places.count == 1 ? "1 place" : "\(places.count) places") {
-                ForEach(places.prefix(60), id: \.place.id) { match in
+        // Places, grouped by city and then neighborhood, in rank order within each.
+        ForEach(groups(results.places.prefix(120)), id: \.title) { group in
+            Section(group.title) {
+                ForEach(group.matches) { match in
                     Button { onPlace(match.place) } label: { SearchResultRow(match: match) }
                         .buttonStyle(.plain)
                 }
@@ -119,70 +182,108 @@ struct SearchSheet: View {
         }
     }
 
-    private var matches: [SearchMatch] {
-        PlaceSearch.search(trimmedQuery, in: app.catalog.places)
+    private func groups(_ matches: ArraySlice<SearchIndex.Match>) -> [(title: String, matches: [SearchIndex.Match])] {
+        var order: [String] = []
+        var grouped: [String: [SearchIndex.Match]] = [:]
+        for match in matches {
+            let title = [match.place.neighborhoodName, match.place.city].compactMap { $0 }.joined(separator: ", ")
+            if grouped[title] == nil { order.append(title) }
+            grouped[title, default: []].append(match)
+        }
+        return order.map { ($0, grouped[$0]!) }
     }
 
-    private var matchingAreas: [Area] {
-        let terms = PlaceSearch.terms(trimmedQuery)
-        guard !terms.isEmpty else { return [] }
-        return app.catalog.areas.filter { area in
-            terms.allSatisfy { PlaceSearch.contains("\(area.name) \(area.city)", $0) }
+    private func localized(_ name: String, _ names: [String: String]) -> String {
+        Place.lookup(Locale.preferredLanguages.first ?? "en", in: names) ?? name
+    }
+
+    // MARK: Translation fallback
+
+    /// When nothing matches and the query looks like it isn't English, ask for an English translation.
+    private func requestTranslationIfNeeded() {
+        let current = trimmedQuery
+        guard current.count >= 2, let index = app.searchIndex, index.search(current).isEmpty else { return }
+        let recognizer = NLLanguageRecognizer()
+        recognizer.processString(current)
+        guard let language = recognizer.dominantLanguage, language != .english, language != .undetermined else { return }
+        translationRequest = current
+    }
+}
+
+/// Translates a search query to English on the device (iOS 18 and later). Silently does nothing when the
+/// language isn't supported or its model isn't downloaded, so search never blocks on it.
+private struct QueryTranslation: ViewModifier {
+    @Binding var request: String?
+    let onResult: (String, String) -> Void
+
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *) {
+            content.modifier(QueryTranslation18(request: $request, onResult: onResult))
+        } else {
+            content
         }
     }
 }
 
-/// A place that matched, with the story text that matched when it wasn't the name.
-nonisolated struct SearchMatch: Sendable {
-    let place: Place
-    let rank: Int
-    let matchedStory: String?
-}
+@available(iOS 18.0, *)
+private struct QueryTranslation18: ViewModifier {
+    @Binding var request: String?
+    let onResult: (String, String) -> Void
+    @State private var configuration: TranslationSession.Configuration?
 
-nonisolated enum PlaceSearch {
-    static func terms(_ query: String) -> [String] {
-        query.split(whereSeparator: { $0.isWhitespace }).map(String.init)
-    }
-
-    /// Case- and accent-insensitive, so "cafe" finds "Café".
-    static func contains(_ text: String, _ term: String) -> Bool {
-        text.range(of: term, options: [.caseInsensitive, .diacriticInsensitive]) != nil
-    }
-
-    /// Every word of the query must appear somewhere. Names rank above areas, areas above stories.
-    static func search(_ query: String, in places: [Place]) -> [SearchMatch] {
-        let terms = terms(query)
-        guard !terms.isEmpty else { return [] }
-        var results: [SearchMatch] = []
-        for place in places {
-            let name = "\(place.name) \(place.spot.localName ?? "")"
-            let where_ = "\(place.areaName) \(place.city)"
-            let stories = place.spot.facts.map { "\($0.headline) \($0.short)" }
-            let everything = ([name, where_] + stories).joined(separator: " ")
-            guard terms.allSatisfy({ contains(everything, $0) }) else { continue }
-
-            let rank: Int
-            var matchedStory: String?
-            if name.range(of: query, options: [.caseInsensitive, .diacriticInsensitive, .anchored]) != nil {
-                rank = 0
-            } else if terms.allSatisfy({ contains(name, $0) }) {
-                rank = 1
-            } else if terms.allSatisfy({ contains("\(name) \(where_)", $0) }) {
-                rank = 2
-            } else {
-                rank = 3
-                matchedStory = place.spot.facts.first { fact in
-                    terms.contains { contains("\(fact.headline) \(fact.short)", $0) }
-                }?.headline
+    func body(content: Content) -> some View {
+        content
+            .translationTask(configuration) { session in
+                guard let text = request else { return }
+                if let response = try? await session.translate(text) {
+                    await MainActor.run { onResult(text, response.targetText) }
+                }
             }
-            results.append(SearchMatch(place: place, rank: rank, matchedStory: matchedStory))
+            .onChange(of: request) { _, text in
+                guard let text else { return }
+                let recognizer = NLLanguageRecognizer()
+                recognizer.processString(text)
+                let source = recognizer.dominantLanguage.map { Locale.Language(identifier: $0.rawValue) }
+                if configuration?.source == source {
+                    configuration?.invalidate()
+                } else {
+                    configuration = .init(source: source, target: Locale.Language(identifier: "en"))
+                }
+            }
+    }
+}
+
+/// A city's neighborhoods, largest collection first.
+private struct CityNeighborhoods: View {
+    let city: City
+    let onRegion: (CityRecord.Bounds) -> Void
+
+    var body: some View {
+        List {
+            Section {
+                Button { onRegion(city.bounds) } label: {
+                    AreaRow(title: String(localized: "All of \(city.name)"), subtitle: nil, count: city.placeCount)
+                }
+                .buttonStyle(.plain)
+            }
+            Section("Neighborhoods") {
+                ForEach(city.neighborhoods.sorted { ($0.placeCount, $1.name) > ($1.placeCount, $0.name) }) { hood in
+                    Button { onRegion(hood.bounds) } label: {
+                        AreaRow(title: Place.lookup(Locale.preferredLanguages.first ?? "en", in: hood.names) ?? hood.name,
+                                subtitle: nil, count: hood.placeCount)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
         }
-        return results.sorted { ($0.rank, $0.place.name) < ($1.rank, $1.place.name) }
+        .listStyle(.insetGrouped)
+        .navigationTitle(city.name)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 private struct SearchResultRow: View {
-    let match: SearchMatch
+    let match: SearchIndex.Match
 
     var body: some View {
         HStack(spacing: 12) {
@@ -198,7 +299,7 @@ private struct SearchResultRow: View {
                     }
                 }
                 .lineLimit(1)
-                Text(match.matchedStory ?? "\(match.place.areaName), \(match.place.city)")
+                Text(match.story ?? match.place.leadFact.headline)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -211,24 +312,52 @@ private struct SearchResultRow: View {
     }
 }
 
+struct TagRow: View {
+    let tag: Tag
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: TagStyle.symbol(for: tag.type))
+                .font(.body.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .frame(width: 36, height: 36)
+                .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(TagStyle.name(of: tag))
+                    .font(.body.weight(.semibold))
+                Text(tag.placeCount == 1 ? "1 place" : "\(tag.placeCount) places")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.vertical, 2)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+    }
+}
+
 struct AreaRow: View {
-    let area: Area
+    let title: String
+    let subtitle: String?
+    let count: Int
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(area.name)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
                     .font(.body.weight(.semibold))
-                Text(area.summary)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
             }
             Spacer(minLength: 8)
-            Text("\(area.spots.count)")
+            Text("\(count)")
                 .font(.subheadline.monospacedDigit().weight(.semibold))
                 .foregroundStyle(.secondary)
-                .accessibilityLabel(String(localized: "\(area.spots.count) places"))
+                .accessibilityLabel(String(localized: "\(count) places"))
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
