@@ -60,3 +60,7 @@ The places and facts are a separate work with their own scope and license. They 
 - In debug builds, set the `debug.contentBaseURL` default to point the app at another server.
 
 "Report a problem" on a story sends the story id, a reason, and an optional note to `https://psst.zigao.wang/api/v1/reports`, queued on the device until it's online. "Help choose new areas" (on by default, off in Settings) sends the rounded center of an empty map area. Both are described in the privacy policy and declared in `PrivacyInfo.xcprivacy`.
+
+## Author
+
+Made by [Zigao Wang](https://www.zigao.wang). Contact: [a@zigao.wang](mailto:a@zigao.wang).
