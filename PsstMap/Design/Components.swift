@@ -189,3 +189,41 @@ struct PressableButtonStyle: ButtonStyle {
             .animation(.snappy(duration: 0.18), value: configuration.isPressed)
     }
 }
+
+extension View {
+    /// Filter chips over the map. On iOS 26 these are system glass buttons (tinted when on).
+    @ViewBuilder
+    func chipButtonStyle(isOn: Bool, color: Color) -> some View {
+        if #available(iOS 26.0, *) {
+            if isOn {
+                self.buttonStyle(.glassProminent).tint(color)
+            } else {
+                self.buttonStyle(.glass)
+            }
+        } else {
+            self.buttonStyle(ChipButtonStyle(isOn: isOn, color: color))
+        }
+    }
+}
+
+private struct ChipButtonStyle: ButtonStyle {
+    let isOn: Bool
+    let color: Color
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(isOn ? Color.white : Color.primary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background {
+                if isOn {
+                    Capsule().fill(color)
+                } else {
+                    Capsule().fill(.regularMaterial)
+                }
+            }
+            .shadow(color: .black.opacity(0.1), radius: 6, y: 2)
+            .scaleEffect(configuration.isPressed ? 0.95 : 1)
+            .animation(.snappy(duration: 0.18), value: configuration.isPressed)
+    }
+}

@@ -152,9 +152,57 @@ struct MapScreen: View {
             .foregroundStyle(.primary)
             .padding(.horizontal, 16)
 
+            storyChips
         }
         .padding(.top, 8)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+    }
+
+    /// One tap to see only one kind of story. Tapping more adds them; "All" clears.
+    private var storyChips: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: 8) {
+                if !app.shownKinds.isEmpty {
+                    Button {
+                        withAnimation(.snappy) { app.shownKinds = [] }
+                    } label: {
+                        HStack(spacing: 5) {
+                            Text(app.shownKinds.count == 1 ? app.shownKinds.first!.label
+                                 : String(localized: "\(app.shownKinds.count) kinds"))
+                            Image(systemName: "xmark")
+                                .font(.caption2.weight(.bold))
+                        }
+                        .font(.subheadline.weight(.semibold))
+                    }
+                    .chipButtonStyle(isOn: true, color: .primary.opacity(0.8))
+                    .accessibilityHint(String(localized: "Shows every kind of place again"))
+                }
+                Button {
+                    withAnimation(.snappy) { app.shownCategories = [] }
+                } label: {
+                    Text("All stories")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .chipButtonStyle(isOn: app.shownCategories.isEmpty, color: Theme.ink)
+                .accessibilityAddTraits(app.shownCategories.isEmpty ? .isSelected : [])
+
+                ForEach(Fact.Category.displayOrder, id: \.self) { category in
+                    let isOn = app.shownCategories.contains(category)
+                    Button {
+                        withAnimation(.snappy) { app.toggle(category) }
+                    } label: {
+                        Label(category.label, systemImage: category.symbol)
+                            .font(.subheadline.weight(.semibold))
+                    }
+                    .chipButtonStyle(isOn: isOn, color: category.color)
+                    .accessibilityAddTraits(isOn ? .isSelected : [])
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 4)
+        }
+        .scrollIndicators(.hidden)
+        .sensoryFeedback(.selection, trigger: app.shownCategories)
     }
 
     private func updateVisibleArea(_ region: MKCoordinateRegion) {
