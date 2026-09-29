@@ -1,11 +1,10 @@
 import SwiftUI
 
-/// One story on a place page. The whisper comes first in full weight, then the rest of the story, its
-/// threads (tags), and a row with its sources, translation, and a way to report a problem.
-/// Legends and disputes carry their label and a colored rule.
+/// One story on a place page, set like a short article: a small line naming the kind of story (and, for
+/// legends and disputes, saying so), the whisper in full weight, the rest of the story, its threads, and a
+/// quiet row with its sources, translation, and a way to report a problem.
 struct FactCard: View {
     let fact: Fact
-    var number = 1
 
     @State private var translated: StoryTranslation.Text?
     @State private var showsTranslation = false
@@ -33,91 +32,35 @@ struct FactCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
-                Text(String(format: "%02d", number))
-                    .font(.caption.weight(.heavy).monospacedDigit())
-                    .foregroundStyle(.secondary)
-                Label(fact.category.label, systemImage: fact.category.symbol)
-                    .font(.caption.weight(.bold))
-                    .textCase(.uppercase)
-                    .tracking(0.8)
-                    .foregroundStyle(fact.category.color)
-                Spacer(minLength: 0)
-                StatusBadge(status: fact.status)
-            }
-            .accessibilityElement(children: .combine)
-
-            if showsTranslation, translated != nil {
-                Label(String(localized: "Translated from English"), systemImage: "translate")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-            }
+            kicker
 
             story(text.headline)
-                .font(.title2.weight(.bold))
+                .font(.system(.title2, design: .serif).weight(.bold))
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
 
             story(text.short)
-                .font(.title3)
+                .font(.system(.title3, design: .serif))
                 .fixedSize(horizontal: false, vertical: true)
 
             story(text.long)
-                .font(.body)
-                .foregroundStyle(.primary.opacity(0.75))
-                .lineSpacing(4)
+                .font(.system(.body, design: .serif))
+                .foregroundStyle(.primary.opacity(0.78))
+                .lineSpacing(5)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 2)
 
             if fact.status != .fact {
-                Label(fact.status.explanation, systemImage: fact.status.symbol)
-                    .font(.footnote.weight(.medium))
+                Text(fact.status.explanation)
+                    .font(.footnote)
                     .foregroundStyle(fact.status.color)
-                    .padding(.top, 2)
             }
 
             TagChips(tagIDs: fact.tags)
-                .padding(.top, 2)
+                .padding(.top, 4)
 
-            HStack(spacing: 8) {
-                SourcesMenu(sources: fact.sources)
-                if canTranslate {
-                    Button {
-                        translationRequest += 1
-                    } label: {
-                        Label(showsTranslation ? String(localized: "Show original") : String(localized: "Translate"),
-                              systemImage: "translate")
-                            .labelStyle(.titleAndIcon)
-                    }
-                    .buttonStyle(SmallPillButtonStyle())
-                    .accessibilityHint(showsTranslation ? "" : String(localized: "Translates into \(StoryTranslation.targetLanguageName)"))
-                }
-                Spacer(minLength: 0)
-                Menu {
-                    Button {
-                        reporting = true
-                    } label: {
-                        Label("Report a problem", systemImage: "exclamationmark.bubble")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.footnote.weight(.bold))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 34, height: 34)
-                        .background(Color.primary.opacity(0.06), in: Circle())
-                        .contentShape(Circle())
-                }
-                .accessibilityLabel(String(localized: "More"))
-            }
-            .padding(.top, 4)
-        }
-        .padding(.leading, fact.status == .fact ? 0 : 14)
-        .overlay(alignment: .leading) {
-            if fact.status != .fact {
-                Capsule()
-                    .fill(fact.status.color)
-                    .frame(width: 3)
-            }
+            toolbar
+                .padding(.top, 2)
         }
         .animation(.snappy, value: showsTranslation)
         .modifier(StoryTranslator(fact: fact, translated: $translated, showsTranslation: $showsTranslation,
@@ -126,17 +69,54 @@ struct FactCard: View {
             ReportSheet(fact: fact)
         }
     }
-}
 
-struct SmallPillButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.footnote.weight(.semibold))
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color.primary.opacity(configuration.isPressed ? 0.12 : 0.06), in: Capsule())
-            .contentShape(Capsule())
+    /// "Name origin", or "Name origin · Disputed", in the story type's color.
+    private var kicker: some View {
+        HStack(spacing: 0) {
+            Text(fact.category.label)
+                .foregroundStyle(fact.category.color)
+            if fact.status != .fact {
+                Text(" · \(fact.status.label)")
+                    .foregroundStyle(fact.status.color)
+            }
+            if showsTranslation, translated != nil {
+                Text(" · \(String(localized: "Translated from English"))")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .font(.footnote.weight(.semibold))
+        .accessibilityElement(children: .combine)
+    }
+
+    private var toolbar: some View {
+        HStack(spacing: 18) {
+            SourcesMenu(sources: fact.sources)
+            if canTranslate {
+                Button {
+                    translationRequest += 1
+                } label: {
+                    Label(showsTranslation ? String(localized: "Show original") : String(localized: "Translate"),
+                          systemImage: "translate")
+                }
+                .accessibilityHint(showsTranslation ? "" : String(localized: "Translates into \(StoryTranslation.targetLanguageName)"))
+            }
+            Spacer(minLength: 0)
+            Menu {
+                Button {
+                    reporting = true
+                } label: {
+                    Label("Report a problem", systemImage: "exclamationmark.bubble")
+                }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
+            }
+            .accessibilityLabel(String(localized: "More"))
+        }
+        .font(.footnote.weight(.medium))
+        .foregroundStyle(.secondary)
+        .buttonStyle(.plain)
     }
 }
 
@@ -156,19 +136,9 @@ struct SourcesMenu: View {
                 }
             }
         } label: {
-            HStack(spacing: 6) {
-                Image(systemName: "books.vertical")
-                Text(summary)
-                    .lineLimit(1)
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(.caption2.weight(.bold))
-            }
-            .font(.footnote.weight(.semibold))
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color.primary.opacity(0.06), in: Capsule())
-            .contentShape(Capsule())
+            Label(summary, systemImage: "books.vertical")
+                .lineLimit(1)
+                .contentShape(Rectangle())
         }
         .accessibilityLabel(String(localized: "Sources: \(summary)"))
         .accessibilityHint(String(localized: "Choose a source to open it"))

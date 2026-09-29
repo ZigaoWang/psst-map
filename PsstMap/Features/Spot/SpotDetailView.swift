@@ -118,15 +118,10 @@ struct PlacePage: View {
     // MARK: Header
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
-                Circle()
-                    .fill(place.spot.kind.color)
-                    .frame(width: 9, height: 9)
-                Text("\(place.spot.kind.label) · \(place.areaName), \(place.city)")
-            }
-            .font(.subheadline.weight(.medium))
-            .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 4) {
+            Text(place.spot.kind.label)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(place.spot.kind.color)
 
             Text(place.name)
                 .font(.largeTitle.weight(.bold))
@@ -142,42 +137,68 @@ struct PlacePage: View {
                     .foregroundStyle(.secondary)
                     .textSelection(.enabled)
             }
+
+            Text(place.locationLine)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .padding(.top, 4)
         }
     }
 
     private var actions: some View {
         let isSaved = app.saved.contains(place.id)
-        return HStack(spacing: 8) {
-            PageAction(title: isSaved ? String(localized: "Saved") : String(localized: "Save"),
-                       symbol: isSaved ? "bookmark.fill" : "bookmark", isOn: isSaved) {
-                withAnimation(.snappy) { app.saved.toggle(place.id) }
-            }
-            .sensoryFeedback(.selection, trigger: isSaved)
-
-            PageAction(title: String(localized: "Walk here"), symbol: "figure.walk") {
-                openInMaps()
-            }
-
-            if showsMapButton {
-                PageAction(title: String(localized: "On map"), symbol: "map") {
-                    dismiss()
-                    app.showOnMap(place)
+        return ScrollView(.horizontal) {
+            HStack(spacing: 8) {
+                Button {
+                    withAnimation(.snappy) { app.saved.toggle(place.id) }
+                } label: {
+                    Label(isSaved ? String(localized: "Saved") : String(localized: "Save"),
+                          systemImage: isSaved ? "bookmark.fill" : "bookmark")
+                        .contentTransition(.symbolEffect(.replace))
                 }
-            }
+                .buttonStyle(.borderedProminent)
+                .tint(isSaved ? .secondary : .primary)
+                .sensoryFeedback(.selection, trigger: isSaved)
+                .accessibilityAddTraits(isSaved ? .isSelected : [])
 
-            ShareLink(item: ShareText.text(for: place)) {
-                PageActionLabel(title: String(localized: "Share"), symbol: "square.and.arrow.up", isOn: false)
+                Button {
+                    openInMaps()
+                } label: {
+                    Label(String(localized: "Walk here"), systemImage: "figure.walk")
+                }
+                .buttonStyle(.bordered)
+
+                if showsMapButton {
+                    Button {
+                        dismiss()
+                        app.showOnMap(place)
+                    } label: {
+                        Label(String(localized: "On map"), systemImage: "map")
+                    }
+                    .buttonStyle(.bordered)
+                }
+
+                ShareLink(item: ShareText.text(for: place)) {
+                    Label(String(localized: "Share"), systemImage: "square.and.arrow.up")
+                }
+                .buttonStyle(.bordered)
             }
-            .buttonStyle(PressableButtonStyle())
+            .font(.subheadline.weight(.semibold))
+            .buttonBorderShape(.capsule)
+            .controlSize(.regular)
+            .tint(.primary)
         }
+        .scrollIndicators(.hidden)
+        .scrollClipDisabled()
     }
 
     // MARK: Stories
 
     private var stories: some View {
-        VStack(alignment: .leading, spacing: 32) {
+        VStack(alignment: .leading, spacing: 28) {
             ForEach(Array(place.spot.facts.enumerated()), id: \.element.id) { index, fact in
-                FactCard(fact: fact, number: index + 1)
+                if index > 0 { Divider() }
+                FactCard(fact: fact)
             }
         }
     }
@@ -242,44 +263,6 @@ struct PlacePage: View {
         }
         item.name = place.name
         item.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeWalking])
-    }
-}
-
-private struct PageAction: View {
-    let title: String
-    let symbol: String
-    var isOn = false
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            PageActionLabel(title: title, symbol: symbol, isOn: isOn)
-        }
-        .buttonStyle(PressableButtonStyle())
-        .accessibilityAddTraits(isOn ? .isSelected : [])
-    }
-}
-
-private struct PageActionLabel: View {
-    let title: String
-    let symbol: String
-    let isOn: Bool
-
-    var body: some View {
-        VStack(spacing: 4) {
-            Image(systemName: symbol)
-                .font(.body.weight(.semibold))
-                .contentTransition(.symbolEffect(.replace))
-            Text(title)
-                .font(.caption.weight(.semibold))
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-        }
-        .foregroundStyle(isOn ? Color(uiColor: .systemBackground) : .primary)
-        .frame(maxWidth: .infinity, minHeight: 56)
-        .background(isOn ? AnyShapeStyle(Color.primary) : AnyShapeStyle(Theme.cardBackground),
-                    in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 

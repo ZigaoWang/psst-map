@@ -39,12 +39,12 @@ struct TagChips: View {
             FlowLayout(spacing: 6) {
                 ForEach(tags) { tag in
                     NavigationLink(value: tag) {
-                        Label(TagStyle.name(of: tag), systemImage: TagStyle.symbol(for: tag.type))
-                            .font(.footnote.weight(.semibold))
+                        Text(TagStyle.name(of: tag))
+                            .font(.footnote.weight(.medium))
                             .foregroundStyle(.primary)
                             .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(Color.primary.opacity(0.07), in: Capsule())
+                            .padding(.vertical, 5)
+                            .overlay(Capsule().strokeBorder(Color.primary.opacity(0.18), lineWidth: 1))
                             .contentShape(Capsule())
                     }
                     .buttonStyle(PressableButtonStyle())

@@ -23,26 +23,6 @@ struct KindBadge: View {
     }
 }
 
-/// Only legends and disputed facts get a badge. Plain facts are the default and stay quiet.
-struct StatusBadge: View {
-    let status: Fact.Status
-
-    var body: some View {
-        if status != .fact {
-            Label(status.label, systemImage: status.symbol)
-                .font(.caption.weight(.bold))
-                .textCase(.uppercase)
-                .foregroundStyle(status.color)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(status.color.opacity(0.14), in: Capsule())
-                .overlay(Capsule().strokeBorder(status.color.opacity(0.5), lineWidth: 1))
-                .accessibilityLabel(status == .legend
-                                    ? String(localized: "Legend: an unproven story")
-                                    : String(localized: "Disputed: sources disagree"))
-        }
-    }
-}
 
 /// The square icon used in lists: the kind's color with its glyph.
 struct KindTile: View {
