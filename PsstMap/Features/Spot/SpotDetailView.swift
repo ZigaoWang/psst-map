@@ -13,6 +13,7 @@ struct SpotDetailView: View {
                 .navigationDestination(for: Place.self) { next in
                     PlacePage(place: next, showsMapButton: showsMapButton)
                 }
+                .navigationDestination(for: Tag.self) { TagPlacesView(tag: $0) }
         }
     }
 }
@@ -122,7 +123,7 @@ struct PlacePage: View {
                 Circle()
                     .fill(place.spot.kind.color)
                     .frame(width: 9, height: 9)
-                Text("\(place.spot.kind.label) · \(place.areaName)")
+                Text("\(place.spot.kind.label) · \(place.areaName), \(place.city)")
             }
             .font(.subheadline.weight(.medium))
             .foregroundStyle(.secondary)
@@ -132,8 +133,11 @@ struct PlacePage: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
 
-            if let local = place.spot.localName {
-                Text(local)
+            // The name on the signs, and the name in the reader's language when it's different again.
+            let otherNames = [place.spot.localName, place.name(forLanguages: Locale.preferredLanguages)]
+                .compactMap { $0 }
+            if !otherNames.isEmpty {
+                Text(otherNames.joined(separator: " · "))
                     .font(.title3)
                     .foregroundStyle(.secondary)
                     .textSelection(.enabled)
@@ -212,10 +216,14 @@ struct PlacePage: View {
         VStack(alignment: .leading, spacing: 6) {
             if let url = place.spot.coordinateSource.url {
                 Link(destination: url) {
-                    Text(place.spot.coordinateSource.isWikidata
-                         ? "Location from Wikidata"
-                         : "Location from OpenStreetMap contributors")
+                    Text(place.spot.coordinateSource.isOpenStreetMap
+                         ? "Location © OpenStreetMap contributors"
+                         : "Location from Wikidata")
                         .underline()
+                }
+                if place.spot.coordinateSource.isOpenStreetMap,
+                   let license = URL(string: "https://www.openstreetmap.org/copyright") {
+                    Link("Open Database License", destination: license)
                 }
             }
             Text("Spotted something wrong? Every story links to its sources.")
