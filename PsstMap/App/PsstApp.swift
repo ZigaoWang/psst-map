@@ -12,7 +12,10 @@ struct PsstApp: App {
                 .task { await MapDatum.shared.calibrate() }
                 .onChange(of: scenePhase) { _, phase in
                     // People cross into and out of mainland China with the app in the background.
-                    if phase == .active { Task { await MapDatum.shared.calibrate() } }
+                    if phase == .active {
+                        Task { await MapDatum.shared.calibrate() }
+                        Task { await app.checkForUpdates() }
+                    }
                 }
                 .task {
                     await app.load()

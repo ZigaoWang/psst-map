@@ -146,10 +146,13 @@ final class AppModel {
         seen.migrate(using: loaded.catalog)
     }
 
-    /// Looks for newer content, at most every few hours. New content replaces the current catalog only
-    /// once it has fully downloaded and checked out; any failure leaves everything as it was.
+    /// Looks for newer content when the app opens or comes back, at most every 15 minutes. It costs one tiny
+    /// request when nothing changed. New content replaces the current catalog only once it has fully
+    /// downloaded and checked out; any failure leaves everything as it was.
     func checkForUpdates(force: Bool = false) async {
-        if !force, let lastUpdateCheck, lastUpdateCheck.timeIntervalSinceNow > -6 * 3600 { return }
+        // The first load installs content itself; an update check before that would race it.
+        guard loadState == .loaded else { return }
+        if !force, let lastUpdateCheck, lastUpdateCheck.timeIntervalSinceNow > -15 * 60 { return }
         lastUpdateCheck = Date()
         await reports.flush()
         do {
