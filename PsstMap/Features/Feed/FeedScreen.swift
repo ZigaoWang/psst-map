@@ -8,6 +8,7 @@ struct FeedScreen: View {
     @State private var items: [Place] = []
     @State private var currentID: String?
     @State private var detailPlace: Place?
+    @Namespace private var zoom
     @State private var isLocating = false
     @State private var locationMessage: String?
     @State private var pageSize: CGSize?
@@ -59,11 +60,7 @@ struct FeedScreen: View {
         // The feed is always dark, so the tab bar above it must be too, or its items vanish.
         .toolbarColorScheme(.dark, for: .tabBar)
         .modifier(DarkTabBarBackground())
-        .sheet(item: $detailPlace) { place in
-            SpotDetailView(place: place)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
-        }
+        .placePresentation($detailPlace, namespace: zoom)
         .onAppear { if items.isEmpty { rebuild() } }
         .onChange(of: app.catalog.places.count) { rebuild() }
         .onChange(of: scope) { rebuild() }
@@ -80,6 +77,7 @@ struct FeedScreen: View {
                         detailPlace = place
                     }
                     .frame(width: size.width, height: size.height)
+                    .placeZoomSource(place.id, in: zoom)
                     .id(place.id)
                 }
                 FeedEndCard(count: items.count, scopeName: scopeTitle, onRestart: restart)

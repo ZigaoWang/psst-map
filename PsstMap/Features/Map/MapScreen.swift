@@ -12,6 +12,7 @@ struct MapScreen: View {
     @State private var isLocating = false
     @State private var locationProblem: LocationProblem?
     @State private var detailPlace: Place?
+    @Namespace private var zoom
 
     enum LocationProblem: Identifiable {
         case denied, unavailable, nothingNearby
@@ -38,15 +39,13 @@ struct MapScreen: View {
         .overlay(alignment: .bottom) {
             if let place = selectedPlace {
                 PlaceCard(place: place, onOpen: { detailPlace = place }, onClose: { selectedID = nil })
+                    .placeZoomSource(place.id, in: zoom)
                     .padding(.bottom, 10)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .animation(.spring(duration: 0.4, bounce: 0.18), value: selectedID == nil)
-        .sheet(item: $detailPlace) { place in
-            SpotDetailView(place: place, showsMapButton: false)
-                .presentationDragIndicator(.visible)
-        }
+        .placePresentation($detailPlace, namespace: zoom, showsMapButton: false)
         .sheet(isPresented: $showsSearch) {
             SearchSheet(onPlace: { place in
                 showsSearch = false
