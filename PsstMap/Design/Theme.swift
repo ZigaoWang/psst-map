@@ -106,9 +106,12 @@ extension Spot.Kind {
 }
 
 extension Fact.Category {
+    /// Order for chips and filters: the most fun and surprising first.
+    static let displayOrder: [Fact.Category] = [.pop, .hidden, .name, .quirk, .people, .history, .design, .engineering]
+
     var label: String {
         switch self {
-        case .name: String(localized: "Name")
+        case .name: String(localized: "Name origin")
         case .hidden: String(localized: "Hidden detail")
         case .history: String(localized: "History")
         case .design: String(localized: "Design")
@@ -136,7 +139,7 @@ extension Fact.Category {
 
     var symbol: String {
         switch self {
-        case .name: "textformat"
+        case .name: "tag"
         case .hidden: "eye"
         case .history: "clock.arrow.circlepath"
         case .design: "paintbrush.pointed"
