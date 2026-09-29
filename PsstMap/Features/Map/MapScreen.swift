@@ -5,7 +5,7 @@ struct MapScreen: View {
     @Environment(AppModel.self) private var app
     @Environment(\.openURL) private var openURL
     @State private var selectedID: String?
-    @State private var showsAreas = false
+    @State private var showsSearch = false
     @State private var showsKey = false
     @State private var visibleAreaName: String?
     @State private var regionRequest: PlaceMapView.RegionRequest?
@@ -47,21 +47,23 @@ struct MapScreen: View {
             SpotDetailView(place: place, showsMapButton: false)
                 .presentationDragIndicator(.visible)
         }
-        .sheet(isPresented: $showsAreas) {
-            AreasSheet { areaID in
-                showsAreas = false
+        .sheet(isPresented: $showsSearch) {
+            SearchSheet(onPlace: { place in
+                showsSearch = false
+                app.showOnMap(place)
+            }, onArea: { areaID in
+                showsSearch = false
                 app.mapFocus = AppModel.MapFocus(target: .area(areaID))
-            }
-            .presentationDetents([.medium, .large])
+            })
         }
         .sheet(isPresented: $showsKey) {
-            MapKeySheet()
+            FilterSheet()
                 .presentationDetents([.medium, .large])
         }
         #if DEBUG
         .onAppear {
             switch UserDefaults.standard.string(forKey: "debug.sheet") {
-            case "areas": showsAreas = true
+            case "search": showsSearch = true
             case "key": showsKey = true
             default: break
             }
@@ -91,59 +93,48 @@ struct MapScreen: View {
             case .nothingNearby:
                 Alert(title: Text("Nothing near you yet"),
                       message: Text("Psst doesn't cover where you are right now. Pick an area to explore instead."),
-                      primaryButton: .default(Text("Choose an area")) { showsAreas = true },
+                      primaryButton: .default(Text("Choose an area")) { showsSearch = true },
                       secondaryButton: .cancel(Text("Show me anyway")) { centerOnUser() })
             }
         }
     }
 
     private var topBar: some View {
-        HStack(alignment: .top, spacing: 10) {
-            VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
                 Button {
-                    showsAreas = true
+                    showsSearch = true
                 } label: {
                     HStack(spacing: 8) {
-                        Image(systemName: "square.stack.3d.up.fill")
-                            .imageScale(.medium)
-                        Text(visibleAreaName ?? String(localized: "Choose an area"))
-                            .font(.subheadline.weight(.semibold))
+                        Image(systemName: "magnifyingglass")
+                        Text("Search")
+                            .font(.body.weight(.medium))
                             .lineLimit(1)
-                        Image(systemName: "chevron.down")
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(.secondary)
+                            .layoutPriority(1)
+                        Spacer(minLength: 4)
+                        if let visibleAreaName {
+                            Text(visibleAreaName)
+                                .font(.footnote.weight(.medium))
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
                     }
                     .foregroundStyle(.primary)
-                    .frame(minHeight: 28)
+                    .frame(maxWidth: .infinity, minHeight: 28)
                 }
                 .floatingButtonStyle()
-                .accessibilityLabel(visibleAreaName.map { String(localized: "Area: \($0)") } ?? String(localized: "Choose an area"))
-                .accessibilityHint(String(localized: "Shows all areas"))
+                .accessibilityLabel(String(localized: "Search places"))
+                .accessibilityValue(visibleAreaName ?? "")
+                .accessibilityHint(String(localized: "Find a place, or browse areas"))
 
-                if app.isFiltering {
-                    Button {
-                        withAnimation(.snappy) { app.clearFilters() }
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "line.3.horizontal.decrease")
-                            Text(app.filterSummary)
-                            Image(systemName: "xmark")
-                                .font(.caption2.weight(.bold))
-                                .foregroundStyle(.secondary)
-                        }
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.primary)
-                    }
-                    .floatingButtonStyle()
-                    .transition(.scale(scale: 0.8, anchor: .topLeading).combined(with: .opacity))
-                    .accessibilityLabel(String(localized: "Filter on"))
-                    .accessibilityHint(String(localized: "Shows every kind of place again"))
+                Button { showsKey = true } label: {
+                    Image(systemName: app.isFiltering ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                        .contentTransition(.symbolEffect(.replace))
+                        .frame(width: 24, height: 24)
                 }
-            }
+                .floatingButtonStyle(circle: true)
+                .accessibilityLabel(String(localized: "Filter"))
 
-            Spacer(minLength: 0)
-
-            VStack(spacing: 10) {
                 Button(action: locate) {
                     Group {
                         if isLocating {
@@ -156,18 +147,12 @@ struct MapScreen: View {
                 }
                 .floatingButtonStyle(circle: true)
                 .accessibilityLabel(String(localized: "Show my location"))
-                Button { showsKey = true } label: {
-                    Image(systemName: app.isFiltering ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
-                        .contentTransition(.symbolEffect(.replace))
-                        .frame(width: 24, height: 24)
-                }
-                .floatingButtonStyle(circle: true)
-                .accessibilityLabel(String(localized: "Filter"))
             }
             .font(.body.weight(.medium))
             .foregroundStyle(.primary)
+            .padding(.horizontal, 16)
+
         }
-        .padding(.horizontal, 16)
         .padding(.top, 8)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
