@@ -39,6 +39,7 @@ struct PlaceMapView: UIViewRepresentable {
         map.showsScale = true
         map.isPitchEnabled = true
         map.register(PlaceMarkerView.self, forAnnotationViewWithReuseIdentifier: PlaceMarkerView.reuseID)
+        map.register(PlaceMarkerView.self, forAnnotationViewWithReuseIdentifier: PlaceMarkerView.highlightReuseID)
         map.register(PlaceClusterView.self,
                      forAnnotationViewWithReuseIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier)
         if let saved = MapRegionMemory.load() {
@@ -70,6 +71,9 @@ struct PlaceMapView: UIViewRepresentable {
         var lastFocusToken: UUID?
         var lastRegionToken: UUID?
         private var annotationsByID: [String: PlaceAnnotation] = [:]
+        /// The selected place is shown by its own pin that never joins a cluster, swapped in for its usual one.
+        /// Changing a pin's clustering while MapKit is selecting it corrupts MapKit's state, so this never does.
+        private var highlight: PlaceAnnotation?
         private var isSyncingSelection = false
         private var didSetInitialRegion = false
 
@@ -84,13 +88,15 @@ struct PlaceMapView: UIViewRepresentable {
                 self.datumVersion = datumVersion
                 map.removeAnnotations(Array(annotationsByID.values))
                 annotationsByID.removeAll()
+                if let highlight { map.removeAnnotation(highlight) }
+                highlight = nil
             }
             let newIDs = Set(places.map(\.id))
             guard newIDs != Set(annotationsByID.keys) else { return }
             let stale = annotationsByID.filter { !newIDs.contains($0.key) }
             map.removeAnnotations(Array(stale.values))
             stale.keys.forEach { annotationsByID[$0] = nil }
-            let added = places.filter { annotationsByID[$0.id] == nil }.map(PlaceAnnotation.init)
+            let added = places.filter { annotationsByID[$0.id] == nil }.map { PlaceAnnotation(place: $0) }
             added.forEach { annotationsByID[$0.place.id] = $0 }
             map.addAnnotations(added)
 
@@ -116,14 +122,21 @@ struct PlaceMapView: UIViewRepresentable {
         }
 
         func syncSelection(on map: MKMapView) {
-            let current = map.selectedAnnotations.compactMap { $0 as? PlaceAnnotation }.first?.place.id
-            guard current != parent.selectedID else { return }
+            let wanted = parent.selectedID
+            guard highlight?.place.id != wanted else { return }
             isSyncingSelection = true
             defer { isSyncingSelection = false }
-            if let id = parent.selectedID, let annotation = annotationsByID[id] {
-                map.selectAnnotation(annotation, animated: true)
-            } else {
-                map.selectedAnnotations.forEach { map.deselectAnnotation($0, animated: true) }
+            if let old = highlight {
+                map.removeAnnotation(old)
+                highlight = nil
+                if let normal = annotationsByID[old.place.id] { map.addAnnotation(normal) }
+            }
+            if let id = wanted, let normal = annotationsByID[id] {
+                map.removeAnnotation(normal)
+                let pin = PlaceAnnotation(place: normal.place, isHighlight: true)
+                map.addAnnotation(pin)
+                highlight = pin
+                map.selectAnnotation(pin, animated: true)
             }
         }
 
@@ -165,8 +178,9 @@ struct PlaceMapView: UIViewRepresentable {
 
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
             switch annotation {
-            case is PlaceAnnotation:
-                return mapView.dequeueReusableAnnotationView(withIdentifier: PlaceMarkerView.reuseID, for: annotation)
+            case let pin as PlaceAnnotation:
+                let id = pin.isHighlight ? PlaceMarkerView.highlightReuseID : PlaceMarkerView.reuseID
+                return mapView.dequeueReusableAnnotationView(withIdentifier: id, for: annotation)
             case is MKClusterAnnotation:
                 return mapView.dequeueReusableAnnotationView(
                     withIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier, for: annotation)
@@ -208,9 +222,11 @@ final class PlaceAnnotation: NSObject, MKAnnotation {
     let place: Place
     let coordinate: CLLocationCoordinate2D
     let title: String?
+    let isHighlight: Bool
 
-    init(place: Place) {
+    init(place: Place, isHighlight: Bool = false) {
         self.place = place
+        self.isHighlight = isHighlight
         self.coordinate = place.mapCoordinate
         self.title = place.name
     }
@@ -218,6 +234,7 @@ final class PlaceAnnotation: NSObject, MKAnnotation {
 
 final class PlaceMarkerView: MKMarkerAnnotationView {
     static let reuseID = "place"
+    static let highlightReuseID = "place.selected"
 
     override var annotation: MKAnnotation? {
         didSet { configure() }
@@ -236,23 +253,13 @@ final class PlaceMarkerView: MKMarkerAnnotationView {
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
 
-    override func setSelected(_ selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
-        // The pin you picked always stands on its own, even where pins are dense.
-        clusteringIdentifier = selected ? nil : "place"
-        displayPriority = selected ? .required : .defaultHigh
-        zPriority = selected ? .max : .defaultUnselected
-    }
-
-    override func prepareForReuse() {
-        super.prepareForReuse()
-        clusteringIdentifier = "place"
-        displayPriority = .defaultHigh
-        zPriority = .defaultUnselected
-    }
-
     private func configure() {
-        guard let place = (annotation as? PlaceAnnotation)?.place else { return }
+        guard let pin = annotation as? PlaceAnnotation else { return }
+        let place = pin.place
+        // Set once per annotation, never during selection. The selected place's pin stands on its own.
+        clusteringIdentifier = pin.isHighlight ? nil : "place"
+        displayPriority = pin.isHighlight ? .required : .defaultHigh
+        zPriority = pin.isHighlight ? .max : .defaultUnselected
         let kind = place.spot.kind
         markerTintColor = kind.uiColor
         glyphTintColor = kind.onUIColor
