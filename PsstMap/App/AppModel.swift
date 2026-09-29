@@ -173,6 +173,8 @@ final class AppModel {
     }
 
     func showOnMap(_ place: Place) {
+        // Someone who picks a place wants to see it, even if the map's filters would hide it.
+        if !isVisible(place) { clearFilters() }
         mapFocus = MapFocus(target: .place(place.id))
         selectedTab = .map
     }
