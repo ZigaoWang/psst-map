@@ -52,17 +52,29 @@ final class SmokeTests: XCTestCase {
         app.launch()
         try XCTSkipIf(app.buttons["Try again"].waitForExistence(timeout: 3), "No area files in Content/areas")
 
-        // The floating area picker above the map responds to a single tap.
-        let areaPicker = app.buttons["Area: City of London"]
-        XCTAssertTrue(areaPicker.waitForExistence(timeout: 10))
-        areaPicker.tap()
-        XCTAssertTrue(app.navigationBars["Areas"].waitForExistence(timeout: 5))
+        // Story chips filter the map in one tap, and "All stories" undoes it.
+        let popChip = app.buttons["Pop culture"].firstMatch
+        XCTAssertTrue(popChip.waitForExistence(timeout: 10))
+        popChip.tap()
+        app.buttons["All stories"].firstMatch.tap()
+
+        // The filter sheet opens, and choosing a story type there doesn't crash.
+        app.buttons["Filter"].tap()
+        XCTAssertTrue(app.navigationBars["Filter"].waitForExistence(timeout: 5))
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Pop culture, '")).firstMatch.tap()
+        app.buttons["Show all"].firstMatch.tap()
         app.buttons["Done"].tap()
 
-        // So do the floating map buttons.
-        app.buttons["Map key"].tap()
-        XCTAssertTrue(app.navigationBars["Map key"].waitForExistence(timeout: 5))
-        app.buttons["Done"].tap()
+        // Search finds a place and shows it on the map.
+        let search = app.buttons["Search places"]
+        XCTAssertTrue(search.waitForExistence(timeout: 10))
+        search.tap()
+        let field = app.textFields.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.typeText("Tower Bridge")
+        let result = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Tower Bridge'")).firstMatch
+        XCTAssertTrue(result.waitForExistence(timeout: 5))
+        result.tap()
 
         // Tapping the card opens the place page.
         let card = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Tower Bridge' OR label CONTAINS ', Tower Bridge'")).firstMatch
