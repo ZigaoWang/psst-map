@@ -6,6 +6,9 @@ options:
   developmentLanguage: en
   createIntermediateGroups: true
   groupSortPosition: top
+packages:
+  H3:
+    path: Packages/H3
 settings:
   base:
     MARKETING_VERSION: "1.0"
@@ -22,6 +25,8 @@ targets:
   PsstMap:
     type: application
     platform: iOS
+    dependencies:
+      - package: H3
     sources:
       - path: PsstMap
       - path: Content
