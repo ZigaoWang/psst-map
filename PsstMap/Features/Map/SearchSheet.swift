@@ -295,7 +295,7 @@ private struct SearchResultRow: View {
                     }
                 }
                 .lineLimit(1)
-                Text(match.story ?? match.place.leadFact.headline)
+                Text.story(match.story ?? match.place.leadFact.headline)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)

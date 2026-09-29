@@ -111,7 +111,7 @@ private struct TagPlaceRow: View {
                 Text(place.name)
                     .font(.body.weight(.semibold))
                     .lineLimit(2)
-                Text((place.spot.facts.first { $0.tags.contains(tagID) } ?? place.leadFact).headline)
+                Text.story((place.spot.facts.first { $0.tags.contains(tagID) } ?? place.leadFact).headline)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)

@@ -144,7 +144,7 @@ private struct SavedCard: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(2)
-                Text(app.leadFact(for: place).headline)
+                Text.story(app.leadFact(for: place).headline)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)

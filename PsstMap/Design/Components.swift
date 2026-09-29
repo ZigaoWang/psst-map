@@ -227,3 +227,13 @@ private struct ChipButtonStyle: ButtonStyle {
             .animation(.snappy(duration: 0.18), value: configuration.isPressed)
     }
 }
+
+extension Text {
+    /// Story text, which is always written in English. Marking it keeps English line breaking and the
+    /// English VoiceOver voice when the interface is in another language.
+    static func story(_ string: String, language: Locale.Language = Locale.Language(identifier: "en")) -> Text {
+        var attributed = AttributedString(string)
+        attributed.languageIdentifier = language.minimalIdentifier
+        return Text(attributed).typesettingLanguage(language)
+    }
+}

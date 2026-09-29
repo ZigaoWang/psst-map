@@ -21,6 +21,16 @@ struct FactCard: View {
         StoryTranslation.Text(headline: fact.headline, short: fact.short, long: fact.long)
     }
 
+    /// The language the story is shown in: English, or the translation's. It sets line breaking and
+    /// the VoiceOver voice, which would otherwise follow the interface language.
+    private var textLanguage: Locale.Language {
+        showsTranslation && translated != nil
+            ? (StoryTranslation.targetLanguage ?? Locale.Language(identifier: "en"))
+            : Locale.Language(identifier: "en")
+    }
+
+    private func story(_ string: String) -> Text { Text.story(string, language: textLanguage) }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
@@ -43,16 +53,16 @@ struct FactCard: View {
                     .foregroundStyle(.secondary)
             }
 
-            Text(text.headline)
+            story(text.headline)
                 .font(.title2.weight(.bold))
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
 
-            Text(text.short)
+            story(text.short)
                 .font(.title3)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Text(text.long)
+            story(text.long)
                 .font(.body)
                 .foregroundStyle(.primary.opacity(0.75))
                 .lineSpacing(4)
@@ -186,7 +196,7 @@ struct ReportSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    Text(fact.headline)
+                    Text.story(fact.headline)
                         .font(.headline)
                 } header: {
                     Text("Story")

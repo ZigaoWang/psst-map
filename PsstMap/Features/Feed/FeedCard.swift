@@ -98,7 +98,7 @@ struct FeedCard: View {
                 .foregroundStyle(.white)
                 .lineLimit(2)
 
-            Text(fact.short)
+            Text.story(fact.short)
                 .font(.body)
                 .foregroundStyle(.white.opacity(0.9))
                 .lineSpacing(3)

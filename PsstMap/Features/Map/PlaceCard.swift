@@ -70,7 +70,7 @@ private struct PlaceMiniCard: View {
                 .font(.headline)
                 .foregroundStyle(.white)
                 .lineLimit(1)
-            Text(app.leadFact(for: place).short)
+            Text.story(app.leadFact(for: place).short)
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.88))
                 .lineLimit(2)
