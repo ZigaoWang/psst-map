@@ -1,8 +1,13 @@
 import SwiftUI
 
-struct AboutView: View {
+/// Settings and everything about Psst: preferences, privacy, what's inside, and credits.
+struct SettingsView: View {
     @Environment(AppModel.self) private var app
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(StoryTranslation.autoKey) private var translateAutomatically = false
+    @AppStorage(DemandSignal.settingKey) private var helpChooseAreas = true
+
+    static let privacyPolicyURL = URL(string: "https://psst.zigao.wang/privacy/")!
 
     private var version: String {
         let info = Bundle.main.infoDictionary
@@ -24,11 +29,32 @@ struct AboutView: View {
                     .padding(.vertical, 8)
                 }
 
+                if StoryTranslation.targetLanguage != nil {
+                    Section {
+                        Toggle("Translate stories automatically", isOn: $translateAutomatically)
+                    } header: {
+                        Text("Stories")
+                    } footer: {
+                        Text("Stories are written in English. When a translation into \(StoryTranslation.targetLanguageName) is available on this device, it's shown instead, with a way back to the original.")
+                    }
+                }
+
+                Section {
+                    Toggle("Help choose new areas", isOn: $helpChooseAreas)
+                    Link("Privacy policy", destination: Self.privacyPolicyURL)
+                } header: {
+                    Text("Privacy")
+                } footer: {
+                    Text("When you look at a part of the map with no stories yet, Psst sends the rough middle of that area (to about 10 km), and nothing else, so we know where to research next. Your saved places, history, and location stay on this device.")
+                }
+
                 Section {
                     LabeledContent("Places", value: "\(app.catalog.places.count)")
-                    LabeledContent("Facts", value: "\(app.catalog.factCount)")
+                    LabeledContent("Stories", value: "\(app.catalog.factCount)")
                     ForEach(app.catalog.cities) { city in
-                        LabeledContent(city.name, value: "\(city.areas.count) \(city.areas.count == 1 ? "area" : "areas")")
+                        LabeledContent(city.name, value: city.neighborhoods.count == 1
+                                       ? String(localized: "1 neighborhood")
+                                       : String(localized: "\(city.neighborhoods.count) neighborhoods"))
                     }
                 } header: {
                     Text("What's inside")
@@ -36,7 +62,7 @@ struct AboutView: View {
 
                 Section {
                     AboutRow(symbol: Fact.Status.fact.symbol, color: .secondary, title: "Facts",
-                             text: "Documented by sources you can open. Tap Read more on any fact to see them.")
+                             text: "Documented by sources you can open from every story.")
                     AboutRow(symbol: Fact.Status.legend.symbol, color: Theme.legend, title: "Legends",
                              text: "Stories people tell that aren't proven, or are known to be untrue. They're always labeled.")
                     AboutRow(symbol: Fact.Status.disputed.symbol, color: Theme.disputed, title: "Disputed",
@@ -58,11 +84,13 @@ struct AboutView: View {
 
                 Section {
                     LabeledContent("Version", value: version)
-                } footer: {
-                    Text("Psst doesn't collect or send any data. Your saved places and location stay on this device.")
+                    if let content = app.content {
+                        LabeledContent("Stories updated", value: content.manifest.contentVersion.prefix(8)
+                            .replacingOccurrences(of: #"(\d{4})(\d{2})(\d{2})"#, with: "$1-$2-$3", options: .regularExpression))
+                    }
                 }
             }
-            .navigationTitle("About")
+            .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {

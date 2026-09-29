@@ -41,8 +41,8 @@ final class SmokeTests: XCTestCase {
 
         app.tabBars.buttons["Saved"].tap()
         XCTAssertTrue(app.staticTexts["Saved"].firstMatch.waitForExistence(timeout: 5))
-        app.buttons["About Psst"].tap()
-        XCTAssertTrue(app.navigationBars["About"].waitForExistence(timeout: 5))
+        app.buttons["Settings"].tap()
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 5))
     }
 
     @MainActor

@@ -28,7 +28,7 @@ struct SavedScreen: View {
         .background(Theme.screenBackground)
         .placePresentation($detailPlace, namespace: zoom)
         .sheet(isPresented: $showsAbout) {
-            AboutView()
+            SettingsView()
         }
         #if DEBUG
         .onAppear { if UserDefaults.standard.string(forKey: "debug.sheet") == "about" { showsAbout = true } }
@@ -52,13 +52,13 @@ struct SavedScreen: View {
             Button {
                 showsAbout = true
             } label: {
-                Image(systemName: "info")
+                Image(systemName: "gearshape")
                     .font(.body.weight(.semibold))
                     .frame(width: 20, height: 20)
             }
             .floatingButtonStyle(circle: true)
             .foregroundStyle(.primary)
-            .accessibilityLabel(String(localized: "About Psst"))
+            .accessibilityLabel(String(localized: "Settings"))
             .padding(.top, 4)
         }
         .padding(.top, 12)
