@@ -26,46 +26,31 @@ struct PlacePage: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var scrolled: CGFloat = 0
     @State private var lookAroundScene: MKLookAroundScene?
     @State private var showsLookAround = false
     @State private var showsAerial = false
 
-    private var fullMapHeight: CGFloat { typeSize.isAccessibilitySize ? 240 : 320 }
-    private let collapsedMapHeight: CGFloat = 150
-
-    /// The map gives up height as the text scrolls up, down to a strip that still shows where you are.
-    private var mapHeight: CGFloat {
-        max(collapsedMapHeight, fullMapHeight - max(scrolled, 0))
-    }
+    private var mapHeight: CGFloat { typeSize.isAccessibilitySize ? 220 : 290 }
 
     var body: some View {
-        ZStack(alignment: .top) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    GeometryReader { proxy in
-                        Color.clear.preference(key: ScrollOffsetKey.self,
-                                               value: -proxy.frame(in: .named("page")).minY)
-                    }
-                    .frame(height: fullMapHeight)
-
-                    VStack(alignment: .leading, spacing: 28) {
-                        header
-                        actions
-                        stories
-                        nearby
-                        footer
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 22)
-                    .padding(.bottom, 40)
-                }
-            }
-            .coordinateSpace(name: "page")
-            .onPreferenceChange(ScrollOffsetKey.self) { scrolled = $0 }
-
+        // The map is a fixed header and the stories scroll below it, never underneath it, so the map
+        // keeps every gesture and the text never slides behind its edge.
+        VStack(spacing: 0) {
             mapHeader
                 .frame(height: mapHeight)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 28) {
+                    header
+                    actions
+                    stories
+                    nearby
+                    footer
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 22)
+                .padding(.bottom, 40)
+            }
         }
         .ignoresSafeArea(edges: .top)
         .background(Theme.screenBackground)
@@ -122,12 +107,11 @@ struct PlacePage: View {
                 }
                 .foregroundStyle(.primary)
                 .padding(12)
-                .opacity(mapHeight > collapsedMapHeight + 40 ? 1 : 0)
-                .animation(.easeOut(duration: 0.2), value: mapHeight > collapsedMapHeight + 40)
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             }
-            .clipShape(UnevenRoundedRectangle(bottomLeadingRadius: 22, bottomTrailingRadius: 22, style: .continuous))
-            .shadow(color: .black.opacity(scrolled > 4 ? 0.15 : 0), radius: 10, y: 4)
+            .overlay(alignment: .bottom) {
+                Divider()
+            }
     }
 
     // MARK: Header
@@ -208,7 +192,7 @@ struct PlacePage: View {
                     .font(.title3.weight(.bold))
                     .accessibilityAddTraits(.isHeader)
                 ScrollView(.horizontal) {
-                    HStack(spacing: 12) {
+                    HStack(alignment: .top, spacing: 12) {
                         ForEach(neighbors) { neighbor in
                             NavigationLink(value: neighbor) {
                                 NearbyCard(place: neighbor, from: place)
@@ -251,11 +235,6 @@ struct PlacePage: View {
         item.name = place.name
         item.openInMaps(launchOptions: [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeWalking])
     }
-}
-
-nonisolated private struct ScrollOffsetKey: PreferenceKey {
-    static let defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }
 
 private struct PageAction: View {
