@@ -90,8 +90,7 @@ struct PlacePage: View {
                 .accessibilityLabel(String(localized: "Close"))
             }
         }
-        .lookAroundViewer(isPresented: $showsLookAround, initialScene: lookAroundScene, allowsNavigation: true,
-                          showsRoadLabels: true, pointsOfInterest: .excludingAll)
+        .fullScreenCover(isPresented: $showsLookAround) { LookAroundScreen(scene: lookAroundScene) }
         .fullScreenCover(isPresented: $showsAerial) {
             AerialMapScreen(place: place)
         }
@@ -217,7 +216,9 @@ struct PlacePage: View {
                         .contentTransition(.symbolEffect(.replace))
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(isSaved ? .secondary : .primary)
+                // Explicit colors: with .primary as the tint, dark mode drew white text on a white button.
+                .tint(isSaved ? Color(.systemGray) : Color(.label))
+                .foregroundStyle(isSaved ? Color.white : Color(.systemBackground))
                 .sensoryFeedback(.selection, trigger: isSaved)
                 .accessibilityAddTraits(isSaved ? .isSelected : [])
 

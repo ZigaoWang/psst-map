@@ -53,8 +53,7 @@ struct FeedCard: View {
             app.saved.toggle(place.id)
         }
         .accessibilityAction(named: String(localized: "Show on map")) { app.showOnMap(place) }
-        .lookAroundViewer(isPresented: $showsLookAround, initialScene: lookAroundScene, allowsNavigation: true,
-                          showsRoadLabels: true, pointsOfInterest: .excludingAll)
+        .fullScreenCover(isPresented: $showsLookAround) { LookAroundScreen(scene: lookAroundScene) }
         .task(id: isActive) {
             // Only the card on screen asks Apple for Look Around, so scrolling stays light.
             guard isActive, lookAroundScene == nil else { return }

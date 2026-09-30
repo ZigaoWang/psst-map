@@ -94,3 +94,30 @@ struct AerialMapScreen: View {
             }
     }
 }
+
+/// Look Around, full screen and interactive, with a close button. Our own cover rather than MapKit's
+/// `lookAroundViewer`, whose dark appearance stayed on the page underneath after it closed.
+struct LookAroundScreen: View {
+    let scene: MKLookAroundScene?
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        LookAroundPreview(initialScene: scene, allowsNavigation: true, showsRoadLabels: true,
+                          pointsOfInterest: .excludingAll, badgePosition: .bottomTrailing)
+            .ignoresSafeArea()
+            .overlay(alignment: .topTrailing) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.body.weight(.semibold))
+                        .frame(width: 20, height: 20)
+                }
+                .floatingButtonStyle(circle: true)
+                .foregroundStyle(.primary)
+                .padding(16)
+                .accessibilityLabel(String(localized: "Close"))
+            }
+    }
+}
