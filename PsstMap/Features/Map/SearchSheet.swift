@@ -11,7 +11,9 @@ struct SearchSheet: View {
     @Environment(AppModel.self) private var app
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
-    @State private var translated: (query: String, english: String)?
+    /// The latest results, searched off the main thread so typing never waits for them.
+    @State private var searched: (query: String, results: SearchIndex.Results)?
+    @State private var translated: (query: String, english: String, results: SearchIndex.Results)?
     @State private var translationRequest: String?
     @FocusState private var isFieldFocused: Bool
 
@@ -38,12 +40,27 @@ struct SearchSheet: View {
                 }
             }
             .modifier(QueryTranslation(request: $translationRequest) { original, english in
-                if original == trimmedQuery { translated = (original, english) }
+                guard original == trimmedQuery, let index = app.searchIndex else { return }
+                Task {
+                    let results = await Task.detached(priority: .userInitiated) { index.search(english) }.value
+                    if original == trimmedQuery { translated = (original, english, results) }
+                }
             })
         }
         .onAppear { isFieldFocused = true }
-        .onChange(of: trimmedQuery) { _, _ in
+        .task(id: trimmedQuery) {
+            let current = trimmedQuery
             translated = nil
+            guard !current.isEmpty, let index = app.searchIndex else {
+                searched = nil
+                return
+            }
+            // A short pause while typing, so each keystroke doesn't start a search of every story.
+            if searched != nil { try? await Task.sleep(for: .milliseconds(120)) }
+            guard !Task.isCancelled else { return }
+            let results = await Task.detached(priority: .userInitiated) { index.search(current) }.value
+            guard !Task.isCancelled else { return }
+            searched = (current, results)
             requestTranslationIfNeeded(submitted: false)
         }
     }
@@ -104,31 +121,35 @@ struct SearchSheet: View {
 
     // MARK: Results
 
+    /// The results for what's typed, or the last ones while the next search runs, so the list doesn't flicker.
     private var currentResults: SearchIndex.Results? {
-        guard let index = app.searchIndex else { return nil }
-        let direct = index.search(trimmedQuery)
-        if direct.isEmpty, let translated, translated.query == trimmedQuery {
-            return index.search(translated.english)
+        guard let searched else { return nil }
+        if searched.results.isEmpty, let translated, translated.query == trimmedQuery {
+            return translated.results
         }
-        return direct
+        return searched.results
     }
+
+    private var directResultsAreEmpty: Bool { searched?.query == trimmedQuery && searched?.results.isEmpty == true }
 
     @ViewBuilder
     private var results: some View {
         if let results = currentResults {
             if results.isEmpty {
-                Section {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Nothing called \u{201C}\(trimmedQuery)\u{201D} yet")
-                            .font(.headline)
-                        Text("Try a street, a station, a person, or a word from a story.")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                if searched?.query == trimmedQuery {
+                    Section {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Nothing called \u{201C}\(trimmedQuery)\u{201D} yet")
+                                .font(.headline)
+                            Text("Try a street, a station, a person, or a word from a story.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.vertical, 6)
                     }
-                    .padding(.vertical, 6)
                 }
             } else {
-                if let translated, translated.query == trimmedQuery, app.searchIndex?.search(trimmedQuery).isEmpty == true {
+                if let translated, translated.query == trimmedQuery, directResultsAreEmpty {
                     Section {
                         Label("Showing results for \u{201C}\(translated.english)\u{201D}", systemImage: "translate")
                             .font(.subheadline)
@@ -205,7 +226,7 @@ struct SearchSheet: View {
     /// half-typed English word ("gatwi") often looks like another language.
     private func requestTranslationIfNeeded(submitted: Bool) {
         let current = trimmedQuery
-        guard current.count >= 2, let index = app.searchIndex, index.search(current).isEmpty else { return }
+        guard current.count >= 2, searched?.query == current, searched?.results.isEmpty == true else { return }
         let otherScript = current.unicodeScalars.contains { $0.properties.isAlphabetic && $0.value > 0x24F }
         guard otherScript || submitted else { return }
         let recognizer = NLLanguageRecognizer()
