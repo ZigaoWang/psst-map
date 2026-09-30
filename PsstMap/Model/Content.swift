@@ -200,6 +200,8 @@ nonisolated struct Spot: Decodable, Hashable, Identifiable, Sendable {
     let districtID: String?
     let neighborhoodID: String?
     let facts: [Fact]
+    /// Reviewed photos in display order. Empty for most places, which show the map instead.
+    let photos: [Photo]
 
     nonisolated enum Kind: String, Codable, CaseIterable, Sendable {
         case transit, crossing, street, building, worship, memorial, green, water, culture
@@ -247,7 +249,7 @@ nonisolated struct Spot: Decodable, Hashable, Identifiable, Sendable {
     init(id: String, name: String, localName: String? = nil, localNameLanguage: String? = nil,
          names: [String: String] = [:], kind: Kind, size: Size?, coordinate: Coordinate,
          coordinateSource: CoordinateSource, countryCode: String? = nil, districtID: String? = nil,
-         neighborhoodID: String? = nil, facts: [Fact]) {
+         neighborhoodID: String? = nil, facts: [Fact], photos: [Photo] = []) {
         self.id = id
         self.name = name
         self.localName = localName
@@ -261,10 +263,12 @@ nonisolated struct Spot: Decodable, Hashable, Identifiable, Sendable {
         self.districtID = districtID
         self.neighborhoodID = neighborhoodID
         self.facts = facts
+        self.photos = photos
     }
 
     enum CodingKeys: String, CodingKey {
         case id, name, localName, names, kind, size, lat, lon, location, countryCode, districtId, neighborhoodId, facts
+        case images
     }
 
     private struct LocalName: Decodable {
@@ -296,6 +300,77 @@ nonisolated struct Spot: Decodable, Hashable, Identifiable, Sendable {
         districtID = try? container.decodeIfPresent(String.self, forKey: .districtId)
         neighborhoodID = try? container.decodeIfPresent(String.self, forKey: .neighborhoodId)
         facts = try container.decode(Lossy<Fact>.self, forKey: .facts).values
+        photos = (try? container.decodeIfPresent(Lossy<Photo>.self, forKey: .images))?.values ?? []
+    }
+
+    /// Current photos, for the header. Historic ones are kept for a "then and now" view.
+    var currentPhotos: [Photo] { photos.filter { $0.kind == .photo } }
+    var historicPhotos: [Photo] { photos.filter { $0.kind == .historic } }
+}
+
+/// A freely licensed or owner's photo of a place. We host resized copies; the credit links to the original.
+nonisolated struct Photo: Decodable, Hashable, Identifiable, Sendable {
+    let id: String
+    let kind: Kind
+    let year: Int?
+    /// What the photo shows, for VoiceOver.
+    let alt: String
+    /// The point to keep in view when cropping, from 0 to 1 with (0, 0) at the top left.
+    let focusX: Double
+    let focusY: Double
+    let full: Rendition
+    let thumb: Rendition
+    let credit: Credit
+
+    nonisolated enum Kind: String, Decodable, Sendable {
+        case photo, historic
+    }
+
+    nonisolated struct Rendition: Decodable, Hashable, Sendable {
+        let file: String
+        let width: Int
+        let height: Int
+
+        var aspectRatio: Double { height > 0 ? Double(width) / Double(height) : 1.5 }
+    }
+
+    nonisolated struct Credit: Decodable, Hashable, Sendable {
+        let author: String
+        let authorUrl: URL?
+        let license: String
+        let licenseUrl: URL?
+        let sourceUrl: URL
+        let source: String?
+        let title: String?
+
+        enum CodingKeys: String, CodingKey { case author, authorUrl, license, licenseUrl, sourceUrl, source, title }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            author = try container.decode(String.self, forKey: .author)
+            authorUrl = try? container.decodeIfPresent(URL.self, forKey: .authorUrl)
+            license = try container.decode(String.self, forKey: .license)
+            licenseUrl = try? container.decodeIfPresent(URL.self, forKey: .licenseUrl)
+            sourceUrl = try container.decode(URL.self, forKey: .sourceUrl)
+            source = try? container.decodeIfPresent(String.self, forKey: .source)
+            title = try? container.decodeIfPresent(String.self, forKey: .title)
+        }
+    }
+
+    enum CodingKeys: String, CodingKey { case id, kind, year, alt, focus, full, thumb, credit }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        kind = try container.decode(Kind.self, forKey: .kind)
+        year = try? container.decodeIfPresent(Int.self, forKey: .year)
+        alt = try container.decode(String.self, forKey: .alt)
+        let focus = (try? container.decode([Double].self, forKey: .focus)) ?? [0.5, 0.5]
+        focusX = focus.count == 2 ? min(max(focus[0], 0), 1) : 0.5
+        focusY = focus.count == 2 ? min(max(focus[1], 0), 1) : 0.5
+        full = try container.decode(Rendition.self, forKey: .full)
+        thumb = try container.decode(Rendition.self, forKey: .thumb)
+        credit = try container.decode(Credit.self, forKey: .credit)
     }
 }
 
