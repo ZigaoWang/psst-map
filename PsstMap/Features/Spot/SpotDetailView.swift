@@ -18,7 +18,8 @@ struct SpotDetailView: View {
     }
 }
 
-/// Everything about one place: a live map you can move around at the top, and the stories below it.
+/// Everything about one place: its photos, or a live map you can move around, at the top, and the stories
+/// below. Places without a reviewed photo show the map.
 struct PlacePage: View {
     let place: Place
     let showsMapButton: Bool
@@ -30,15 +31,36 @@ struct PlacePage: View {
     @State private var lookAroundScene: MKLookAroundScene?
     @State private var showsLookAround = false
     @State private var showsAerial = false
+    @State private var showsMap = false
+    @State private var photoID: String?
+    @State private var openedPhoto: Photo?
 
     private var mapHeight: CGFloat { typeSize.isAccessibilitySize ? 220 : 290 }
+    private var photos: [Photo] { place.spot.photos }
+    private var showsPhotos: Bool { !photos.isEmpty && !showsMap }
+    private var currentPhoto: Photo? { photos.first { $0.id == photoID } ?? photos.first }
 
     var body: some View {
         // The map is a fixed header and the stories scroll below it, never underneath it, so the map
         // keeps every gesture and the text never slides behind its edge.
         VStack(spacing: 0) {
-            mapHeader
-                .frame(height: mapHeight)
+            Group {
+                if showsPhotos {
+                    photoHeader
+                } else {
+                    mapHeader
+                }
+            }
+            .frame(height: mapHeight)
+            .transition(.opacity)
+
+            if showsPhotos, let currentPhoto {
+                PhotoCredit(photo: currentPhoto)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 8)
+                    .overlay(alignment: .bottom) { Divider() }
+            }
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 28) {
@@ -73,6 +95,7 @@ struct PlacePage: View {
         .fullScreenCover(isPresented: $showsAerial) {
             AerialMapScreen(place: place)
         }
+        .fullScreenCover(item: $openedPhoto) { PhotoViewer(photo: $0) }
         .task(id: place.id) {
             let scene = await SpotVisuals.shared.lookAroundScene(for: place)
             withAnimation(.snappy) { lookAroundScene = scene }
@@ -81,20 +104,43 @@ struct PlacePage: View {
 
     // MARK: Map
 
+    private var photoHeader: some View {
+        PhotoPager(photos: photos, selection: $photoID) { openedPhoto = $0 }
+            .overlay(alignment: .bottomTrailing) {
+                HStack(spacing: 8) {
+                    lookAroundButton
+                    Button {
+                        withAnimation(.snappy) { showsMap = true }
+                    } label: {
+                        Label(String(localized: "Map"), systemImage: "map")
+                            .font(.subheadline.weight(.semibold))
+                    }
+                    .floatingButtonStyle()
+                }
+                .foregroundStyle(.primary)
+                .padding(12)
+                // Clear the page dots.
+                .padding(.bottom, photos.count > 1 ? 18 : 0)
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+            }
+    }
+
     private var mapHeader: some View {
         AerialMapView(place: place, animated: !reduceMotion)
             // Bottom right, so Apple's Maps logo and Legal link stay visible at the bottom left.
             .overlay(alignment: .bottomTrailing) {
                 HStack(spacing: 8) {
-                    if lookAroundScene != nil {
+                    lookAroundButton
+                    if !photos.isEmpty {
                         Button {
-                            showsLookAround = true
+                            withAnimation(.snappy) { showsMap = false }
                         } label: {
-                            Label("Look Around", systemImage: "binoculars.fill")
+                            Image(systemName: "photo")
                                 .font(.subheadline.weight(.semibold))
+                                .frame(width: 20, height: 20)
                         }
-                        .floatingButtonStyle()
-                        .transition(.scale.combined(with: .opacity))
+                        .floatingButtonStyle(circle: true)
+                        .accessibilityLabel(String(localized: "Photos"))
                     }
                     Button {
                         showsAerial = true
@@ -113,6 +159,20 @@ struct PlacePage: View {
             .overlay(alignment: .bottom) {
                 Divider()
             }
+    }
+
+    @ViewBuilder
+    private var lookAroundButton: some View {
+        if lookAroundScene != nil {
+            Button {
+                showsLookAround = true
+            } label: {
+                Label("Look Around", systemImage: "binoculars.fill")
+                    .font(.subheadline.weight(.semibold))
+            }
+            .floatingButtonStyle()
+            .transition(.scale.combined(with: .opacity))
+        }
     }
 
     // MARK: Header
