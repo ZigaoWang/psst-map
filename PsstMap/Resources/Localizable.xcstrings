@@ -1141,6 +1141,26 @@
         }
       }
     },
+    "Opens the photo full screen": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全屏查看照片"
+          }
+        }
+      }
+    },
+    "Opens where the photo came from": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开照片的来源"
+          }
+        }
+      }
+    },
     "Or just swipe": {
       "localizations": {
         "zh-Hans": {
@@ -1197,6 +1217,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "人物或团体"
+          }
+        }
+      }
+    },
+    "Photo %@: %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "照片（%1$@）：%2$@"
+          }
+        }
+      }
+    },
+    "Photo: %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "照片：%@"
+          }
+        }
+      }
+    },
+    "Photos": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "照片"
           }
         }
       }
@@ -1767,6 +1817,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "街道、小巷、街角与环岛"
+          }
+        }
+      }
+    },
+    "Taken in %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "摄于 %@"
           }
         }
       }
