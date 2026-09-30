@@ -170,7 +170,11 @@ final class AppModel {
         let size = FeedCard.pictureSize(for: UIScreen.main.bounds.size)
         Task(priority: .utility) {
             for place in first {
-                await SpotVisuals.shared.picture(for: place, size: size, scale: 2, dark: true)
+                if let photo = place.spot.currentPhotos.first {
+                    await PhotoLoader.shared.prefetch(photo)
+                } else {
+                    await SpotVisuals.shared.picture(for: place, size: size, scale: 2, dark: true)
+                }
             }
         }
     }

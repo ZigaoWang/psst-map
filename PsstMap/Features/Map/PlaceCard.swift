@@ -124,7 +124,9 @@ struct PlaceThumbnail: View {
                     .foregroundStyle(place.spot.kind.onColor.opacity(0.9))
             }
             .overlay {
-                if let picture {
+                if let photo = place.spot.currentPhotos.first {
+                    PlacePhotoImage(photo: photo, placeholder: .clear)
+                } else if let picture {
                     Image(uiImage: picture.image)
                         .resizable()
                         .scaledToFill()
@@ -135,6 +137,7 @@ struct PlaceThumbnail: View {
         .accessibilityHidden(true)
         .task(id: place.id) {
             picture = nil
+            guard place.spot.currentPhotos.isEmpty else { return }
             let size = FeedCard.pictureSize(for: UIScreen.main.bounds.size)
             await SpotVisuals.shared.picture(for: place, size: size, scale: 2, dark: true) { update in
                 withAnimation(.easeOut(duration: 0.25)) { picture = update }

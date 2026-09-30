@@ -113,6 +113,11 @@ struct FeedCard: View {
             .font(.footnote.weight(.semibold))
             .foregroundStyle(.white.opacity(0.75))
             .padding(.top, 2)
+
+            if let photo = place.spot.currentPhotos.first {
+                PhotoCredit(photo: photo, color: .white.opacity(0.55))
+                    .padding(.top, 4)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .shadow(color: .black.opacity(0.4), radius: 6, y: 1)
@@ -194,7 +199,11 @@ struct FeedPicture: View {
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            if let picture {
+            if let photo = place.spot.currentPhotos.first {
+                PlacePhotoImage(photo: photo, size: .full, placeholder: place.spot.kind.color.opacity(0.35))
+                    .frame(width: size.width, height: size.height)
+                    .scaleEffect(zoomed ? 1.09 : 1.0, anchor: .center)
+            } else if let picture {
                 Image(uiImage: picture.image)
                     .resizable()
                     .scaledToFill()
@@ -210,6 +219,7 @@ struct FeedPicture: View {
         .task(id: place.id) {
             picture = nil
             didFail = false
+            guard place.spot.currentPhotos.isEmpty else { return }
             let result = await SpotVisuals.shared.picture(for: place, size: size, scale: min(displayScale, 2),
                                                           dark: true) { update in
                 withAnimation(.easeOut(duration: 0.4)) { picture = update }

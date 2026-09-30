@@ -210,7 +210,11 @@ struct FeedScreen: View {
         let pictureSize = FeedCard.pictureSize(for: size)
         for place in upcoming {
             Task(priority: .utility) {
-                await SpotVisuals.shared.picture(for: place, size: pictureSize, scale: 2, dark: true)
+                if let photo = place.spot.currentPhotos.first {
+                    await PhotoLoader.shared.prefetch(photo)
+                } else {
+                    await SpotVisuals.shared.picture(for: place, size: pictureSize, scale: 2, dark: true)
+                }
             }
         }
     }
