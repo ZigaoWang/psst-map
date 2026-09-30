@@ -44,7 +44,7 @@ struct SearchSheet: View {
         .onAppear { isFieldFocused = true }
         .onChange(of: trimmedQuery) { _, _ in
             translated = nil
-            requestTranslationIfNeeded()
+            requestTranslationIfNeeded(submitted: false)
         }
     }
 
@@ -60,7 +60,11 @@ struct SearchSheet: View {
                 .autocorrectionDisabled()
                 .submitLabel(.search)
                 .onSubmit {
-                    if let first = currentResults?.places.first { onPlace(first.place) }
+                    if let first = currentResults?.places.first {
+                        onPlace(first.place)
+                    } else {
+                        requestTranslationIfNeeded(submitted: true)
+                    }
                 }
             if !query.isEmpty {
                 Button {
@@ -196,12 +200,18 @@ struct SearchSheet: View {
     // MARK: Translation fallback
 
     /// When nothing matches and the query looks like it isn't English, ask for an English translation.
-    private func requestTranslationIfNeeded() {
+    /// Only when the language is clear: at once for another script (大本钟), since the script shows it isn't
+    /// English; for Latin letters only when the person presses Search and the guess is confident, because a
+    /// half-typed English word ("gatwi") often looks like another language.
+    private func requestTranslationIfNeeded(submitted: Bool) {
         let current = trimmedQuery
         guard current.count >= 2, let index = app.searchIndex, index.search(current).isEmpty else { return }
+        let otherScript = current.unicodeScalars.contains { $0.properties.isAlphabetic && $0.value > 0x24F }
+        guard otherScript || submitted else { return }
         let recognizer = NLLanguageRecognizer()
         recognizer.processString(current)
-        guard let language = recognizer.dominantLanguage, language != .english, language != .undetermined else { return }
+        guard let (language, confidence) = recognizer.languageHypotheses(withMaximum: 1).first,
+              language != .english, language != .undetermined, otherScript || confidence >= 0.9 else { return }
         translationRequest = current
     }
 }
@@ -235,15 +245,19 @@ private struct QueryTranslation18: ViewModifier {
                     await MainActor.run { onResult(text, response.targetText) }
                 }
             }
-            .onChange(of: request) { _, text in
-                guard let text else { return }
+            .task(id: request) {
+                guard let text = request else { return }
                 let recognizer = NLLanguageRecognizer()
                 recognizer.processString(text)
-                let source = recognizer.dominantLanguage.map { Locale.Language(identifier: $0.rawValue) }
+                guard let detected = recognizer.dominantLanguage else { return }
+                let source = Locale.Language(identifier: detected.rawValue)
+                let english = Locale.Language(identifier: "en")
+                // Search never asks to download a language: it only uses models already on the device.
+                guard await LanguageAvailability().status(from: source, to: english) == .installed else { return }
                 if configuration?.source == source {
                     configuration?.invalidate()
                 } else {
-                    configuration = .init(source: source, target: Locale.Language(identifier: "en"))
+                    configuration = .init(source: source, target: english)
                 }
             }
     }
