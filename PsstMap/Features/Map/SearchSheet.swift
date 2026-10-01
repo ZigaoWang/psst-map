@@ -27,7 +27,8 @@ struct SearchSheet: View {
                 }
             }
             .listStyle(.insetGrouped)
-            .scrollDismissesKeyboard(.immediately)
+            // Only a drag hides the keyboard: results arriving and changing the list mustn't.
+            .scrollDismissesKeyboard(.interactively)
             .safeAreaInset(edge: .top, spacing: 0) { searchField }
             .navigationTitle("Search")
             .navigationBarTitleDisplayMode(.inline)
