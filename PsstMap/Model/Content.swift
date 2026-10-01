@@ -7,6 +7,7 @@ import Foundation
 // - an unknown fact category or place kind decodes as `.other` and is shown in a neutral style;
 // - a fact with an unknown veracity is dropped, because it can't be labeled honestly;
 // - a place, fact, source, area, or tag that fails to decode is skipped instead of failing its pack;
+// - a guide that fails to decode is dropped, and its place still shows its stories;
 // - unknown fields are ignored.
 
 /// The file the app downloads first. Packs are named by their hash and never change.
@@ -202,6 +203,8 @@ nonisolated struct Spot: Decodable, Hashable, Identifiable, Sendable {
     let facts: [Fact]
     /// Reviewed photos in display order. Empty for most places, which show the map instead.
     let photos: [Photo]
+    /// What the place is, kept apart from its stories: an identifier line, an About, and key facts.
+    let guide: Guide?
 
     nonisolated enum Kind: String, Codable, CaseIterable, Sendable {
         case transit, crossing, street, building, worship, memorial, green, water, culture
@@ -249,7 +252,7 @@ nonisolated struct Spot: Decodable, Hashable, Identifiable, Sendable {
     init(id: String, name: String, localName: String? = nil, localNameLanguage: String? = nil,
          names: [String: String] = [:], kind: Kind, size: Size?, coordinate: Coordinate,
          coordinateSource: CoordinateSource, countryCode: String? = nil, districtID: String? = nil,
-         neighborhoodID: String? = nil, facts: [Fact], photos: [Photo] = []) {
+         neighborhoodID: String? = nil, facts: [Fact], photos: [Photo] = [], guide: Guide? = nil) {
         self.id = id
         self.name = name
         self.localName = localName
@@ -264,11 +267,12 @@ nonisolated struct Spot: Decodable, Hashable, Identifiable, Sendable {
         self.neighborhoodID = neighborhoodID
         self.facts = facts
         self.photos = photos
+        self.guide = guide
     }
 
     enum CodingKeys: String, CodingKey {
         case id, name, localName, names, kind, size, lat, lon, location, countryCode, districtId, neighborhoodId, facts
-        case images
+        case images, guide
     }
 
     private struct LocalName: Decodable {
@@ -301,11 +305,56 @@ nonisolated struct Spot: Decodable, Hashable, Identifiable, Sendable {
         neighborhoodID = try? container.decodeIfPresent(String.self, forKey: .neighborhoodId)
         facts = try container.decode(Lossy<Fact>.self, forKey: .facts).values
         photos = (try? container.decodeIfPresent(Lossy<Photo>.self, forKey: .images))?.values ?? []
+        guide = try? container.decodeIfPresent(Guide.self, forKey: .guide)
     }
 
     /// Current photos, for the header. Historic ones are kept for a "then and now" view.
     var currentPhotos: [Photo] { photos.filter { $0.kind == .photo } }
     var historicPhotos: [Photo] { photos.filter { $0.kind == .historic } }
+}
+
+/// Practical information about a place, written and reviewed separately from its stories: a one-line
+/// identifier ("Bronze statue, 1843, by Edward Baily"), a short neutral About, and key facts from Wikidata.
+nonisolated struct Guide: Decodable, Hashable, Sendable {
+    let id: String
+    let identifier: String
+    let about: String
+    let sources: [Fact.Source]
+    let keyFacts: [KeyFact]
+    /// The Wikidata item the key facts come from.
+    let wikidataID: String?
+
+    /// One line of the info box. `property` is the Wikidata property the value came from.
+    nonisolated struct KeyFact: Decodable, Hashable, Sendable {
+        let property: String
+        /// The English label, used when this version of the app has no translation for the property.
+        let label: String
+        let value: String
+    }
+
+    enum CodingKeys: String, CodingKey { case id, identifier, about, sources, keyFacts, wikidataId }
+
+    init(id: String, identifier: String, about: String, sources: [Fact.Source] = [], keyFacts: [KeyFact] = [],
+         wikidataID: String? = nil) {
+        self.id = id
+        self.identifier = identifier
+        self.about = about
+        self.sources = sources
+        self.keyFacts = keyFacts
+        self.wikidataID = wikidataID
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        identifier = try container.decode(String.self, forKey: .identifier)
+        about = try container.decode(String.self, forKey: .about)
+        sources = (try? container.decodeIfPresent(Lossy<Fact.Source>.self, forKey: .sources))?.values ?? []
+        keyFacts = (try? container.decodeIfPresent(Lossy<KeyFact>.self, forKey: .keyFacts))?.values ?? []
+        wikidataID = try? container.decodeIfPresent(String.self, forKey: .wikidataId)
+    }
+
+    var wikidataURL: URL? { wikidataID.flatMap { URL(string: "https://www.wikidata.org/wiki/\($0)") } }
 }
 
 /// A freely licensed or owner's photo of a place. We host resized copies; the credit links to the original.
