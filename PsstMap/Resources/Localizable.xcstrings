@@ -1,6 +1,16 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    " · %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " · %@"
+          }
+        }
+      }
+    },
     "%@ and %lld more": {
       "localizations": {
         "zh-Hans": {
@@ -22,6 +32,7 @@
       }
     },
     "%@ · %@, %@": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -422,6 +433,7 @@
       }
     },
     "Disputed: sources disagree": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
@@ -762,6 +774,7 @@
       }
     },
     "Legend: an unproven story": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
