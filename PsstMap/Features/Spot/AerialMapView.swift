@@ -95,29 +95,38 @@ struct AerialMapScreen: View {
     }
 }
 
-/// Look Around, full screen and interactive, with a close button. Our own cover rather than MapKit's
-/// `lookAroundViewer`, whose dark appearance stayed on the page underneath after it closed.
-struct LookAroundScreen: View {
-    let scene: MKLookAroundScene?
-
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        LookAroundPreview(initialScene: scene, allowsNavigation: true, showsRoadLabels: true,
-                          pointsOfInterest: .excludingAll, badgePosition: .bottomTrailing)
-            .ignoresSafeArea()
-            .overlay(alignment: .topTrailing) {
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.body.weight(.semibold))
-                        .frame(width: 20, height: 20)
+extension View {
+    /// MapKit's own full-screen Look Around, with its single close button. MapKit switches the window to dark
+    /// while it's open and, presented from a sheet, didn't switch it back, so the page underneath stayed dark;
+    /// this puts every window back to the system appearance when it closes.
+    func lookAround(isPresented: Binding<Bool>, scene: MKLookAroundScene?) -> some View {
+        lookAroundViewer(isPresented: isPresented, initialScene: scene, allowsNavigation: true, showsRoadLabels: true,
+                         pointsOfInterest: .excludingAll)
+            .onChange(of: isPresented.wrappedValue) { _, open in
+                guard !open else { return }
+                // At once, and again after MapKit's closing animation, which can set it back on its way out.
+                Self.restoreSystemAppearance()
+                Task { @MainActor in
+                    for delay in [0.3, 0.8] {
+                        try? await Task.sleep(for: .seconds(delay))
+                        Self.restoreSystemAppearance()
+                    }
                 }
-                .floatingButtonStyle(circle: true)
-                .foregroundStyle(.primary)
-                .padding(16)
-                .accessibilityLabel(String(localized: "Close"))
             }
+    }
+
+    @MainActor
+    static func restoreSystemAppearance() {
+        for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {
+            for window in scene.windows {
+                window.overrideUserInterfaceStyle = .unspecified
+                var controller = window.rootViewController
+                while let current = controller {
+                    current.overrideUserInterfaceStyle = .unspecified
+                    current.setNeedsStatusBarAppearanceUpdate()
+                    controller = current.presentedViewController
+                }
+            }
+        }
     }
 }

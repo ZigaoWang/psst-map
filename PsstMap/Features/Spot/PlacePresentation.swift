@@ -27,13 +27,34 @@ private struct PlacePresentationModifier: ViewModifier {
         if #available(iOS 18.0, *) {
             content.fullScreenCover(item: $place) { place in
                 SpotDetailView(place: place, showsMapButton: showsMapButton)
+                    .modifier(SystemAppearance())
                     .navigationTransition(.zoom(sourceID: place.id, in: namespace))
             }
         } else {
             content.sheet(item: $place) { place in
                 SpotDetailView(place: place, showsMapButton: showsMapButton)
+                    .modifier(SystemAppearance())
                     .presentationDragIndicator(.visible)
             }
         }
+    }
+}
+
+/// The phone's own light or dark setting, read from the screen. A place page follows it even when opened from the
+/// always-dark feed, and even while MapKit's Look Around (which switches what it covers to dark) is closing.
+private struct SystemAppearance: ViewModifier {
+    @State private var scheme = Self.current
+
+    func body(content: Content) -> some View {
+        content
+            .environment(\.colorScheme, scheme)
+            .preferredColorScheme(scheme)
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+                scheme = Self.current
+            }
+    }
+
+    static var current: ColorScheme {
+        UIScreen.main.traitCollection.userInterfaceStyle == .dark ? .dark : .light
     }
 }

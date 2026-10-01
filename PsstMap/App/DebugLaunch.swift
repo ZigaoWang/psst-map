@@ -16,6 +16,8 @@ enum DebugLaunch {
     static var placeID: String? { UserDefaults.standard.string(forKey: "debug.place") }
     static var areaID: String? { UserDefaults.standard.string(forKey: "debug.area") }
     static var sheet: String? { UserDefaults.standard.string(forKey: "debug.sheet") }
+    /// `-debug.lookAround YES` opens Look Around as soon as the place page has a scene.
+    static var lookAround: Bool { UserDefaults.standard.bool(forKey: "debug.lookAround") }
 
     static func apply(to app: AppModel) {
         if let tab { app.selectedTab = tab }

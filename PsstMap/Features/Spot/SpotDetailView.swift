@@ -90,7 +90,7 @@ struct PlacePage: View {
                 .accessibilityLabel(String(localized: "Close"))
             }
         }
-        .fullScreenCover(isPresented: $showsLookAround) { LookAroundScreen(scene: lookAroundScene) }
+        .lookAround(isPresented: $showsLookAround, scene: lookAroundScene)
         .fullScreenCover(isPresented: $showsAerial) {
             AerialMapScreen(place: place)
         }
@@ -98,6 +98,9 @@ struct PlacePage: View {
         .task(id: place.id) {
             let scene = await SpotVisuals.shared.lookAroundScene(for: place)
             withAnimation(.snappy) { lookAroundScene = scene }
+            #if DEBUG
+            if DebugLaunch.lookAround, scene != nil { showsLookAround = true }
+            #endif
         }
     }
 
