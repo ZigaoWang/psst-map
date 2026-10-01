@@ -172,6 +172,16 @@
         }
       }
     },
+    "About": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "简介"
+          }
+        }
+      }
+    },
     "All of %@": {
       "localizations": {
         "zh-Hans": {
@@ -192,12 +202,33 @@
         }
       }
     },
+    "Architect": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "建筑师"
+          }
+        }
+      }
+    },
     "Architecture, art, and signs": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
             "value": "建筑、艺术与招牌"
+          }
+        }
+      }
+    },
+    "Area": {
+      "comment": "The size of a place, in square meters or hectares",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "面积"
           }
         }
       }
@@ -252,12 +283,32 @@
         }
       }
     },
+    "Builder": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "承建方"
+          }
+        }
+      }
+    },
     "Building": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
             "value": "建筑"
+          }
+        }
+      }
+    },
+    "Built": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "建成于"
           }
         }
       }
@@ -278,6 +329,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "取消"
+          }
+        }
+      }
+    },
+    "Capacity": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "容量"
           }
         }
       }
@@ -372,6 +433,26 @@
         }
       }
     },
+    "Commemorates": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "纪念对象"
+          }
+        }
+      }
+    },
+    "Commissioned by": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "委托方"
+          }
+        }
+      }
+    },
     "Contact": {
       "localizations": {
         "zh-Hans": {
@@ -392,6 +473,16 @@
         }
       }
     },
+    "Creator": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "创作者"
+          }
+        }
+      }
+    },
     "Credits": {
       "localizations": {
         "zh-Hans": {
@@ -408,6 +499,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "文化"
+          }
+        }
+      }
+    },
+    "Dedicated to": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "奉献对象"
           }
         }
       }
@@ -503,6 +604,16 @@
         }
       }
     },
+    "Elevation": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "海拔"
+          }
+        }
+      }
+    },
     "Engineering": {
       "localizations": {
         "zh-Hans": {
@@ -519,6 +630,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "时代"
+          }
+        }
+      }
+    },
+    "Established": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "建立于"
           }
         }
       }
@@ -633,12 +754,42 @@
         }
       }
     },
+    "Floors": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "楼层"
+          }
+        }
+      }
+    },
     "Found on Psst": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
             "value": "发现于 Psst"
+          }
+        }
+      }
+    },
+    "Founded": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "创立于"
+          }
+        }
+      }
+    },
+    "From Apple Maps. Check before you go.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "信息来自 Apple 地图。出发前请再确认。"
           }
         }
       }
@@ -663,12 +814,32 @@
         }
       }
     },
+    "Height": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "高度"
+          }
+        }
+      }
+    },
     "Help choose new areas": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
             "value": "帮助选择新区域"
+          }
+        }
+      }
+    },
+    "Heritage status": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保护级别"
           }
         }
       }
@@ -723,6 +894,16 @@
         }
       }
     },
+    "In Apple Maps": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 Apple 地图中查看"
+          }
+        }
+      }
+    },
     "It's offensive or inappropriate": {
       "localizations": {
         "zh-Hans": {
@@ -739,6 +920,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "内容已过时"
+          }
+        }
+      }
+    },
+    "Key facts from Wikidata": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "基本信息来自维基数据"
           }
         }
       }
@@ -800,6 +991,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "传说都有标注"
+          }
+        }
+      }
+    },
+    "Length": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "长度"
           }
         }
       }
@@ -894,6 +1095,17 @@
         }
       }
     },
+    "Made": {
+      "comment": "When a statue or monument was made",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "制作于"
+          }
+        }
+      }
+    },
     "Made by": {
       "localizations": {
         "zh-Hans": {
@@ -920,6 +1132,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "地图和街景图像由 Apple 地图提供。在中国大陆，地图数据由 Apple 从本地供应商获得授权。"
+          }
+        }
+      }
+    },
+    "Material": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "材料"
           }
         }
       }
@@ -980,6 +1202,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "名字由来"
+          }
+        }
+      }
+    },
+    "Named after": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "得名于"
           }
         }
       }
@@ -1144,6 +1376,26 @@
         }
       }
     },
+    "Opened": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启用于"
+          }
+        }
+      }
+    },
+    "Opening hours": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开放时间"
+          }
+        }
+      }
+    },
     "Opens the full story": {
       "localizations": {
         "zh-Hans": {
@@ -1170,6 +1422,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "打开照片的来源"
+          }
+        }
+      }
+    },
+    "Operator": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运营方"
           }
         }
       }
@@ -1230,6 +1492,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "人物或团体"
+          }
+        }
+      }
+    },
+    "Phone": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "电话"
           }
         }
       }
@@ -1400,6 +1672,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "可靠来源对此说法不一。"
+          }
+        }
+      }
+    },
+    "Religion": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "宗教"
           }
         }
       }
@@ -1834,6 +2116,26 @@
         }
       }
     },
+    "Structural engineer": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "结构工程师"
+          }
+        }
+      }
+    },
+    "Style": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "风格"
+          }
+        }
+      }
+    },
     "Taken in %@": {
       "localizations": {
         "zh-Hans": {
@@ -2104,6 +2406,16 @@
         }
       }
     },
+    "Visiting": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "参观信息"
+          }
+        }
+      }
+    },
     "Walk here": {
       "localizations": {
         "zh-Hans": {
@@ -2120,6 +2432,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "水域"
+          }
+        }
+      }
+    },
+    "Website": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网站"
           }
         }
       }

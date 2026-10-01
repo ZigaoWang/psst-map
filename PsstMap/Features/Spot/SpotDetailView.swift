@@ -66,6 +66,10 @@ struct PlacePage: View {
                 VStack(alignment: .leading, spacing: 28) {
                     header
                     actions
+                    if let guide = place.spot.guide {
+                        AboutSection(guide: guide)
+                    }
+                    VisitingSection(place: place)
                     stories
                     nearby
                     footer
@@ -190,6 +194,13 @@ struct PlacePage: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
 
+            if let identifier = place.spot.guide?.identifier {
+                Text.story(identifier)
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
             // The name on the signs, and the name in the reader's language when it's different again.
             let otherNames = [place.spot.localName, place.name(forLanguages: Locale.preferredLanguages)]
                 .compactMap { $0 }
@@ -260,6 +271,13 @@ struct PlacePage: View {
 
     private var stories: some View {
         VStack(alignment: .leading, spacing: 28) {
+            // With an About above, the stories get their own heading so the two never blur together.
+            if place.spot.guide != nil {
+                Text("Stories")
+                    .font(.title3.weight(.bold))
+                    .accessibilityAddTraits(.isHeader)
+                    .padding(.bottom, -14)
+            }
             ForEach(Array(place.spot.facts.enumerated()), id: \.element.id) { index, fact in
                 if index > 0 { Divider() }
                 FactCard(fact: fact)

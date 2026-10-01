@@ -7,12 +7,13 @@ final class ContentDecodingTests: XCTestCase {
         #"{"cityId": "wof:london", "places": [\#(places)]}"#
     }
 
-    private func place(id: String, kind: String = "building", facts: String, images: String? = nil) -> String {
+    private func place(id: String, kind: String = "building", facts: String, images: String? = nil,
+                       guide: String? = nil) -> String {
         """
         {"id": "\(id)", "name": "\(id)", "kind": "\(kind)", "size": "medium", "lat": 51.5, "lon": -0.1,
          "location": {"source": "osm", "ref": "node/1", "license": "ODbL-1.0"},
          "localName": {"lang": "en", "name": "Local \(id)"}, "names": {"zh-Hans": "名字"},
-         "countryCode": "GB", "neighborhoodId": "wof:1", "facts": [\(facts)]\(images.map { ", \"images\": [\($0)]" } ?? "")}
+         "countryCode": "GB", "neighborhoodId": "wof:1", "facts": [\(facts)]\(images.map { ", \"images\": [\($0)]" } ?? "")\(guide.map { ", \"guide\": \($0)" } ?? "")}
         """
     }
 
@@ -51,6 +52,27 @@ final class ContentDecodingTests: XCTestCase {
         XCTAssertEqual(spot.facts[0].status, .fact)
         XCTAssertEqual(spot.facts[0].tags, ["tg_1"])
         XCTAssertEqual(spot.facts[0].sources.count, 1)
+    }
+
+    func testGuideDecodes() throws {
+        let guide = """
+            {"id": "gd_1", "identifier": "Bronze statue, 1843", "about": "A statue.", "wikidataId": "Q1",
+             "sources": [{"title": "t", "publisher": "p", "url": "https://example.com"}],
+             "keyFacts": [{"property": "P170", "label": "Creator", "value": "E. H. Baily", "values": []},
+                          {"property": "P9999", "label": "Something new", "value": "x"}, {"property": "P1"}],
+             "lastVerified": "2026-10-01", "somethingNewer": true}
+            """
+        let spot = try decode(pack(places: place(id: "a", facts: fact(id: "f"), guide: guide))).places[0]
+        XCTAssertEqual(spot.guide?.identifier, "Bronze statue, 1843")
+        XCTAssertEqual(spot.guide?.wikidataURL?.absoluteString, "https://www.wikidata.org/wiki/Q1")
+        XCTAssertEqual(spot.guide?.keyFacts.map(\.property), ["P170", "P9999"], "A broken key fact is skipped")
+        XCTAssertEqual(spot.guide?.keyFacts[1].localizedLabel, "Something new", "Unknown properties keep their label")
+    }
+
+    func testBrokenGuideLeavesThePlace() throws {
+        let spot = try decode(pack(places: place(id: "a", facts: fact(id: "f"), guide: #"{"id": "gd_1"}"#))).places[0]
+        XCTAssertNil(spot.guide)
+        XCTAssertEqual(spot.facts.count, 1)
     }
 
     func testPhotosDecodeAndBrokenOnesAreSkipped() throws {

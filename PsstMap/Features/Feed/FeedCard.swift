@@ -97,6 +97,14 @@ struct FeedCard: View {
                 .foregroundStyle(.white)
                 .lineLimit(2)
 
+            if let identifier = place.spot.guide?.identifier {
+                Text.story(identifier)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.white.opacity(0.8))
+                    .lineLimit(1)
+                    .padding(.top, -4)
+            }
+
             Text.story(fact.short)
                 .font(.body)
                 .foregroundStyle(.white.opacity(0.9))
@@ -148,7 +156,7 @@ struct FeedCard: View {
     }
 
     private var accessibilityText: String {
-        var parts = [place.name, place.locationLine]
+        var parts = [place.name] + [place.spot.guide?.identifier].compactMap { $0 } + [place.locationLine]
         if fact.status == .legend { parts.append(String(localized: "Legend, not a proven fact")) }
         if fact.status == .disputed { parts.append(String(localized: "Disputed")) }
         parts.append(fact.short)
