@@ -48,7 +48,7 @@ Places with a reviewed photo show it instead: full width at the top of the place
 
 Besides its stories, every place has plain practical information, kept visibly apart from them: a one-line identifier ("Bronze statue, 1843, by Edward Baily") on feed cards and under the name on the place page, and an About section with two or three neutral sentences and an info box of key facts from Wikidata (creator, dates, style, height, material, heritage status, and similar). Key fact labels are translated by Wikidata property in `GuideViews.swift`; the About has the same Translate button as stories. It's written and reviewed in `psst-content` (its guide, section 13).
 
-Opening hours, website, and phone come from Apple Maps, never from Psst's content: when a place page opens, `VisitorInfoLookup` looks for an Apple Maps point of interest near the pin with a matching name, and shows a Visiting section only when Apple has a website or phone for it. Opening hours open Apple's own place card (iOS 18 and later; Apple Maps on iOS 17), since MapKit doesn't expose hours directly. Nothing is cached beyond the current launch.
+Opening hours, website, and phone come from Apple Maps, never from Psst's content: when a place page opens, `VisitorInfoLookup` looks for an Apple Maps point of interest near the pin with a matching name, and shows a Visiting section only when Apple has a website or phone for it. "Hours and details" opens Apple's own place card (iOS 18 and later; Apple Maps on iOS 17), which shows opening hours where Apple has them; MapKit doesn't expose hours directly. Nothing is cached beyond the current launch.
 
 ### Room to grow
 
