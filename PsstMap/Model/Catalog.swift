@@ -53,15 +53,12 @@ nonisolated struct Place: Hashable, Identifiable, Sendable {
         return parts.joined(separator: ", ")
     }
 
-    /// The place's name in the reader's language, when there is one and it adds something beyond the
-    /// English and local names already shown.
+    /// The place's name in the reader's language (the first of `languages`, the one the app is shown in), when
+    /// it adds something beyond the English and local names already shown. Only the first: someone reading in
+    /// English with Chinese as a second language shouldn't see Chinese names.
     func name(forLanguages languages: [String]) -> String? {
-        for language in languages {
-            guard let name = Self.lookup(language, in: spot.names) else { continue }
-            if name != spot.name && name != spot.localName { return name }
-            return nil
-        }
-        return nil
+        guard let language = languages.first, let name = Self.lookup(language, in: spot.names) else { return nil }
+        return name != spot.name && name != spot.localName ? name : nil
     }
 
     /// Finds a name for a language, trying "zh-Hans-CN", then "zh-Hans", then "zh".
