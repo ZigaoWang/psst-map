@@ -57,7 +57,17 @@ final class VisitorInfoLookup {
         guard let item = Self.bestMatch(in: candidates, names: names, near: center, within: radius) else { return nil }
         // Without a website or phone there's nothing to visit (a landmark), so the section stays hidden.
         guard item.url != nil || item.phoneNumber?.isEmpty == false else { return nil }
-        return VisitorInfo(mapItem: item, website: item.url, phone: item.phoneNumber)
+        return VisitorInfo(mapItem: await Self.fullItem(item), website: item.url, phone: item.phoneNumber)
+    }
+
+    /// Search results can be partial; Apple's place card shows everything (opening hours included) only for the
+    /// item looked up by its identifier.
+    private static func fullItem(_ item: MKMapItem) async -> MKMapItem {
+        if #available(iOS 18.0, *), let identifier = item.identifier,
+           let full = try? await MKMapItemRequest(mapItemIdentifier: identifier).mapItem {
+            return full
+        }
+        return item
     }
 
     /// Every name the place goes by, normalized for comparison.
@@ -72,28 +82,43 @@ final class VisitorInfoLookup {
         let here = CLLocation(latitude: center.latitude, longitude: center.longitude)
         return items
             .compactMap { item -> (MKMapItem, CLLocationDistance)? in
-                guard let name = item.name, matches(normalize(name), names) else { return nil }
+                guard let name = item.name else { return nil }
                 let distance = location(of: item).distance(from: here)
-                return distance <= radius ? (item, distance) : nil
+                // A loose match only counts right next to the pin.
+                switch match(normalize(name), names) {
+                case .strong where distance <= radius: return (item, distance)
+                case .loose where distance <= min(radius, 60): return (item, distance)
+                default: return nil
+                }
             }
             .min { $0.1 < $1.1 }?.0
     }
 
-    /// The same name, or one containing the other as whole words and making up most of it ("Belsize Park"
-    /// and "Belsize Park Station", but not "Bank" and "HSBC Bank").
-    static func matches(_ candidate: String, _ names: [String]) -> Bool {
-        guard !candidate.isEmpty else { return false }
-        return names.contains { name in
-            if candidate == name { return true }
-            // Chinese, Japanese, and Korean names have no spaces between words, so compare characters.
-            let cjk = name.unicodeScalars.contains { $0.value >= 0x3000 }
+    enum Match: Comparable { case none, loose, strong }
+
+    /// Strong: the same name, or one containing the other as whole words and making up most of it ("Belsize
+    /// Park" and "Belsize Park Station"). Loose: exactly half of it, when that half is a real name ("George
+    /// Inn" and "The George"), never a common word ("Bank" and "HSBC Bank").
+    static func match(_ candidate: String, _ names: [String]) -> Match {
+        guard !candidate.isEmpty else { return .none }
+        return names.map { name -> Match in
+            if candidate == name { return .strong }
             let (short, long) = name.count < candidate.count ? (name, candidate) : (candidate, name)
-            if cjk {
-                return long.contains(short) && Double(short.count) / Double(long.count) > 0.5
+            // Chinese, Japanese, and Korean names have no spaces between words, so compare characters.
+            if short.unicodeScalars.contains(where: { $0.value >= 0x3000 }) {
+                return long.contains(short) && Double(short.count) / Double(long.count) > 0.5 ? .strong : .none
             }
-            let shortWords = short.split(separator: " ").count, longWords = long.split(separator: " ").count
-            return " \(long) ".contains(" \(short) ") && Double(shortWords) / Double(longWords) > 0.5
-        }
+            let shortWords = short.split(separator: " "), longWords = long.split(separator: " ")
+            guard " \(long) ".contains(" \(short) ") || shortWords.allSatisfy(longWords.contains) else { return .none }
+            let share = Double(shortWords.count) / Double(longWords.count)
+            if share > 0.5 { return .strong }
+            if share == 0.5 && (shortWords.count >= 2 || short.count >= 5) { return .loose }
+            return .none
+        }.max() ?? .none
+    }
+
+    static func matches(_ candidate: String, _ names: [String]) -> Bool {
+        match(candidate, names) != .none
     }
 
     static func normalize(_ name: String) -> String {

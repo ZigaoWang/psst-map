@@ -16,6 +16,13 @@ final class VisitorInfoTests: XCTestCase {
         XCTAssertTrue(matches("和平饭店北楼", "和平饭店"))
     }
 
+    func testHalfANameIsOnlyALooseMatch() {
+        let ours = [VisitorInfoLookup.normalize("The George Inn")]
+        XCTAssertEqual(VisitorInfoLookup.match(VisitorInfoLookup.normalize("The George"), ours), .loose)
+        XCTAssertEqual(VisitorInfoLookup.match(VisitorInfoLookup.normalize("National Trust - George Inn"), ours), .loose)
+        XCTAssertEqual(VisitorInfoLookup.match(VisitorInfoLookup.normalize("George Inn"), ours), .strong)
+    }
+
     func testNeighborsAreNotMatched() {
         XCTAssertFalse(matches("HSBC Bank", "Bank"))
         XCTAssertFalse(matches("Pret A Manger", "Bank station"))

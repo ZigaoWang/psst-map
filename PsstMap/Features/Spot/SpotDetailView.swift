@@ -34,6 +34,7 @@ struct PlacePage: View {
     @State private var showsMap = false
     @State private var photoID: String?
     @State private var openedPhoto: Photo?
+    @State private var visitorInfo: VisitorInfo?
 
     private var mapHeight: CGFloat { typeSize.isAccessibilitySize ? 220 : 290 }
     private var photos: [Photo] { place.spot.photos }
@@ -69,7 +70,10 @@ struct PlacePage: View {
                     if let guide = place.spot.guide {
                         AboutSection(guide: guide)
                     }
-                    VisitingSection(place: place)
+                    if let visitorInfo {
+                        VisitingSection(info: visitorInfo)
+                            .transition(.opacity)
+                    }
                     stories
                     nearby
                     footer
@@ -99,6 +103,10 @@ struct PlacePage: View {
             AerialMapScreen(place: place)
         }
         .fullScreenCover(item: $openedPhoto) { PhotoViewer(photo: $0) }
+        .task(id: place.id) {
+            let found = await VisitorInfoLookup.shared.info(for: place)
+            withAnimation(.snappy) { visitorInfo = found }
+        }
         .task(id: place.id) {
             let scene = await SpotVisuals.shared.lookAroundScene(for: place)
             withAnimation(.snappy) { lookAroundScene = scene }

@@ -874,6 +874,16 @@
         }
       }
     },
+    "Hours and details": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开放时间与详情"
+          }
+        }
+      }
+    },
     "How it was built and works": {
       "localizations": {
         "zh-Hans": {
@@ -1382,16 +1392,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "启用于"
-          }
-        }
-      }
-    },
-    "Opening hours": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "开放时间"
           }
         }
       }

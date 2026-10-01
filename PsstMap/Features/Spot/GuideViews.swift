@@ -160,57 +160,47 @@ struct KeyFactsBox: View {
     }
 }
 
-/// Opening hours, website, and phone from Apple Maps, looked up when the page opens and never stored by
-/// Psst. Shown only when Apple Maps knows the place as somewhere you can visit.
+/// Opening hours, website, and phone from Apple Maps, looked up when the page opens (`VisitorInfoLookup`) and
+/// never stored by Psst. Shown only when Apple Maps knows the place as somewhere you can visit.
 struct VisitingSection: View {
-    let place: Place
+    let info: VisitorInfo
 
-    @State private var info: VisitorInfo?
     @State private var showsPlaceCard = false
     @Environment(\.openURL) private var openURL
 
     var body: some View {
-        Group {
-            if let info {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Visiting")
-                        .font(.title3.weight(.bold))
-                        .accessibilityAddTraits(.isHeader)
-                    VStack(alignment: .leading, spacing: 0) {
-                        row(symbol: "clock", title: String(localized: "Opening hours"),
-                            detail: String(localized: "In Apple Maps")) {
-                            showPlaceCard(info)
-                        }
-                        if let website = info.website {
-                            Divider().padding(.leading, 40)
-                            row(symbol: "safari", title: String(localized: "Website"),
-                                detail: website.host(percentEncoded: false) ?? website.absoluteString) {
-                                openURL(website)
-                            }
-                        }
-                        if let phone = info.phone, let call = info.phoneURL {
-                            Divider().padding(.leading, 40)
-                            row(symbol: "phone", title: String(localized: "Phone"), detail: phone) {
-                                openURL(call)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 14)
-                    .background(Color(.secondarySystemGroupedBackground),
-                                in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.primary.opacity(0.06)))
-                    Text("From Apple Maps. Check before you go.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Visiting")
+                .font(.title3.weight(.bold))
+                .accessibilityAddTraits(.isHeader)
+            VStack(alignment: .leading, spacing: 0) {
+                row(symbol: "clock", title: String(localized: "Hours and details"),
+                    detail: String(localized: "In Apple Maps")) {
+                    showPlaceCard(info)
                 }
-                .transition(.opacity)
-                .modifier(PlaceCardSheet(isPresented: $showsPlaceCard, item: info.mapItem))
+                if let website = info.website {
+                    Divider().padding(.leading, 40)
+                    row(symbol: "safari", title: String(localized: "Website"),
+                        detail: website.host(percentEncoded: false) ?? website.absoluteString) {
+                        openURL(website)
+                    }
+                }
+                if let phone = info.phone, let call = info.phoneURL {
+                    Divider().padding(.leading, 40)
+                    row(symbol: "phone", title: String(localized: "Phone"), detail: phone) {
+                        openURL(call)
+                    }
+                }
             }
+            .padding(.horizontal, 14)
+            .background(Color(.secondarySystemGroupedBackground),
+                        in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.primary.opacity(0.06)))
+            Text("From Apple Maps. Check before you go.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
-        .task(id: place.id) {
-            let found = await VisitorInfoLookup.shared.info(for: place)
-            withAnimation(.snappy) { info = found }
-        }
+        .modifier(PlaceCardSheet(isPresented: $showsPlaceCard, item: info.mapItem))
     }
 
     private func showPlaceCard(_ info: VisitorInfo) {
