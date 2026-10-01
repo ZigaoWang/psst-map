@@ -20,7 +20,7 @@ Run the `PsstMap` scheme. Tests: `xcodebuild test -project PsstMap.xcodeproj -sc
 
 - `Content/v2/`: the content snapshot bundled with the app (see "Content" below). Git ignores it.
 - `PsstMap/Model`: the decoded content (`Spot`, `Fact`, `Tag`, cities and areas) and the `Catalog` the app browses, grouped by city and neighborhood.
-- `PsstMap/Services`: loading and updating content (`ContentLibrary`, `ContentUpdater`), search (`SearchIndex`), story translation, problem reports, saved places, feed history, location, pictures (`SpotVisuals`) and photos (`PhotoLoader`), and China map handling (`ChinaCoordinates`, `MapDatum`).
+- `PsstMap/Services`: loading and updating content (`ContentLibrary`, `ContentUpdater`), search (`SearchIndex`), story translation, problem reports, saved places, feed history, location, pictures (`SpotVisuals`) and photos (`PhotoLoader`), visitor information from Apple Maps (`VisitorInfo`), and China map handling (`ChinaCoordinates`, `MapDatum`).
 - `PsstMap/Features`: the map, search, the feed, the place detail, threads (tags), saved places, settings, and the welcome screen.
 - `PsstMap/Design`: colors, badges, and shared components.
 - `Vendor/H3`: Uber's H3 library, compiled into the app, so it computes the same map cells as the server.
@@ -42,7 +42,13 @@ There's no public API that says which one is active, so `MapDatum` asks MapKit t
 
 Each place gets a picture from Apple: a Look Around street view for small things (a statue, a door) and a pitched 3D map for anything larger, since Look Around tends to face a blank wall when pointed at a building. The place detail view is interactive and offers both where Look Around exists. Pictures are cached on disk. If none can be loaded, a designed placeholder in the place's color is shown.
 
-Places with a reviewed photo show it instead: full width at the top of the place page (swipe for more, tap for full screen, with the map one tap away), and in the feed and thumbnails. Photos are freely licensed or the owner's own, hosted as resized copies on the Psst server under `/images/`, and cached on disk. Each one has a credit line that opens its source, alt text for VoiceOver, and a focus point the app keeps in view when it crops. Historic photos show their year. The content pipeline in `psst-content` finds, reviews, and publishes them (its guide, section 13).
+Places with a reviewed photo show it instead: full width at the top of the place page (swipe for more, tap for full screen, with the map one tap away), and in the feed and thumbnails. Photos are freely licensed or the owner's own, hosted as resized copies on the Psst server under `/images/`, and cached on disk. Each one has a credit line that opens its source, alt text for VoiceOver, and a focus point the app keeps in view when it crops. Historic photos show their year. The content pipeline in `psst-content` finds, reviews, and publishes them (its guide, section 14).
+
+### Guide information
+
+Besides its stories, every place has plain practical information, kept visibly apart from them: a one-line identifier ("Bronze statue, 1843, by Edward Baily") on feed cards and under the name on the place page, and an About section with two or three neutral sentences and an info box of key facts from Wikidata (creator, dates, style, height, material, heritage status, and similar). Key fact labels are translated by Wikidata property in `GuideViews.swift`; the About has the same Translate button as stories. It's written and reviewed in `psst-content` (its guide, section 13).
+
+Opening hours, website, and phone come from Apple Maps, never from Psst's content: when a place page opens, `VisitorInfoLookup` looks for an Apple Maps point of interest near the pin with a matching name, and shows a Visiting section only when Apple has a website or phone for it. Opening hours open Apple's own place card (iOS 18 and later; Apple Maps on iOS 17), since MapKit doesn't expose hours directly. Nothing is cached beyond the current launch.
 
 ### Room to grow
 
