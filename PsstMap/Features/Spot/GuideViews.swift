@@ -48,10 +48,11 @@ struct AboutSection: View {
     @State private var canTranslate = false
     @State private var translationRequest = 0
 
-    /// The About goes through the same on-device translation as stories, as a story with no headline.
+    /// The About goes through the same on-device translation as stories: the identifier as its headline, the
+    /// About as its text, and no separate long version.
     private var asStory: Fact {
         Fact(id: guide.id, category: .other, status: .fact, headline: guide.identifier, short: guide.about,
-             long: guide.about, sources: guide.sources)
+             long: "", sources: guide.sources)
     }
 
     private var language: Locale.Language {

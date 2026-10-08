@@ -49,7 +49,8 @@ struct SearchSheet: View {
             })
         }
         .onAppear { isFieldFocused = true }
-        .task(id: trimmedQuery) {
+        // Keyed on the index too, so a search typed before it was ready runs as soon as it is.
+        .task(id: "\(trimmedQuery)|\(app.searchIndex != nil)") {
             let current = trimmedQuery
             translated = nil
             guard !current.isEmpty, let index = app.searchIndex else {

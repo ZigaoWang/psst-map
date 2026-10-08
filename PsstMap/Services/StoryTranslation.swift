@@ -117,11 +117,11 @@ private struct StoryTranslator18: ViewModifier {
             }
             .translationTask(configuration) { session in
                 guard let target = StoryTranslation.targetLanguage else { return }
-                let requests = [
-                    TranslationSession.Request(sourceText: fact.headline, clientIdentifier: "headline"),
-                    TranslationSession.Request(sourceText: fact.short, clientIdentifier: "short"),
-                    TranslationSession.Request(sourceText: fact.long, clientIdentifier: "long"),
-                ]
+                let headline = TranslationSession.Request(sourceText: fact.headline, clientIdentifier: "headline")
+                let short = TranslationSession.Request(sourceText: fact.short, clientIdentifier: "short")
+                let long = TranslationSession.Request(sourceText: fact.long, clientIdentifier: "long")
+                // An About has no separate long version, so there's nothing more to translate.
+                let requests = fact.long.isEmpty ? [headline, short] : [headline, short, long]
                 guard let responses = try? await session.translations(from: requests) else { return }
                 let byID = Dictionary(responses.map { ($0.clientIdentifier ?? "", $0.targetText) },
                                       uniquingKeysWith: { first, _ in first })
@@ -157,6 +157,7 @@ private struct StoryTranslatorSheet: ViewModifier {
         content
             .onAppear { isAvailable = StoryTranslation.targetLanguage != nil }
             .onChange(of: request) { isPresented = true }
-            .translationPresentation(isPresented: $isPresented, text: "\(fact.headline)\n\n\(fact.short)\n\n\(fact.long)")
+            .translationPresentation(isPresented: $isPresented,
+                                     text: [fact.headline, fact.short, fact.long].filter { !$0.isEmpty }.joined(separator: "\n\n"))
     }
 }
