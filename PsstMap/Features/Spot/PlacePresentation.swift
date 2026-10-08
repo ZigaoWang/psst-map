@@ -55,6 +55,6 @@ private struct SystemAppearance: ViewModifier {
     }
 
     static var current: ColorScheme {
-        UIScreen.main.traitCollection.userInterfaceStyle == .dark ? .dark : .light
+        AppWindow.isDark ? .dark : .light
     }
 }

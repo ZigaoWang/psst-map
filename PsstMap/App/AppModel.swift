@@ -102,7 +102,7 @@ final class AppModel {
     private static let shownKindsKey = "filter.shownKinds"
     private static let shownCategoriesKey = "filter.shownCategories"
 
-    private static func load<Value: RawRepresentable & Hashable>(key: String) -> Set<Value> where Value.RawValue == String {
+    private static func load<Value: RawRepresentable & Hashable & Sendable>(key: String) -> Set<Value> where Value.RawValue == String {
         Set((UserDefaults.standard.stringArray(forKey: key) ?? []).compactMap(Value.init(rawValue:)))
     }
 
@@ -120,15 +120,24 @@ final class AppModel {
     func load() async {
         loadState = .loading
         do {
-            let loaded = try await Task.detached(priority: .userInitiated) {
-                try ContentLibrary.loadBest()
-            }.value
+            let loaded: ContentLibrary.Loaded
+            do {
+                loaded = try await Task.detached(priority: .userInitiated) { try ContentLibrary.loadBest() }.value
+            } catch ContentLibrary.LoadError.missing {
+                // A build without a bundled snapshot downloads the places once.
+                guard let downloaded = try await updater.update(current: nil) else { throw ContentLibrary.LoadError.missing }
+                loaded = downloaded
+            }
             install(loaded)
             loadState = .loaded
             warmUpFeed()
             Task { await checkForUpdates() }
+        } catch ContentLibrary.LoadError.missing {
+            loadState = .failed(String(localized: "Psst needs to download its places once. Connect to the internet and try again."))
+        } catch is URLError {
+            loadState = .failed(String(localized: "Psst needs to download its places once. Connect to the internet and try again."))
         } catch {
-            loadState = .failed(error.localizedDescription)
+            loadState = .failed(String(localized: "The places on this phone couldn't be read."))
         }
     }
 
@@ -167,7 +176,7 @@ final class AppModel {
     /// Starts making the first feed pictures right away, so the feed is ready by the time someone opens it.
     private func warmUpFeed() {
         let first = FeedOrder.order(catalog.places, seen: seen.ids, seed: feedSeed).prefix(3)
-        let size = FeedCard.pictureSize(for: UIScreen.main.bounds.size)
+        let size = FeedCard.pictureSize(for: AppWindow.size)
         Task(priority: .utility) {
             for place in first {
                 if let photo = place.spot.currentPhotos.first {

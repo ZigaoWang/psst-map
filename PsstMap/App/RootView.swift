@@ -58,14 +58,14 @@ private struct LoadFailedView: View {
     var body: some View {
         VStack(spacing: 14) {
             Wordmark(size: 48, color: Theme.ink)
-            Text("Something went quiet")
+            Text("Psst couldn't load")
                 .font(.title2.weight(.bold))
                 .foregroundStyle(Theme.ink)
             Text(message)
                 .font(.body)
                 .foregroundStyle(Theme.ink.opacity(0.7))
                 .multilineTextAlignment(.center)
-            Text("Try again. If it keeps happening, reinstalling Psst will fix it.")
+            Text("If it keeps happening, reinstalling Psst fixes it.")
                 .font(.footnote)
                 .foregroundStyle(Theme.ink.opacity(0.6))
                 .multilineTextAlignment(.center)

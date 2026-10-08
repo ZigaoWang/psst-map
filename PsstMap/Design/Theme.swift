@@ -8,9 +8,10 @@ enum Theme {
         Color(UIColor.dynamic(light: light, dark: dark))
     }
 
-    /// Warm off-white paper and deep ink, used for brand moments (welcome, empty states).
-    static let ink = Color(UIColor(hex: 0x10182B))
-    static let paper = Color(UIColor(hex: 0xF6F3EC))
+    /// Warm off-white paper and deep ink, used for brand moments (loading, welcome, empty states). In dark mode
+    /// they swap, so these screens never flash light.
+    static let ink = dynamic(light: 0x10182B, dark: 0xF6F3EC)
+    static let paper = dynamic(light: 0xF6F3EC, dark: 0x10182B)
 
     static let legend = dynamic(light: 0x6B3FA0, dark: 0xB794E6)
     static let disputed = dynamic(light: 0xA14A00, dark: 0xF0A04B)

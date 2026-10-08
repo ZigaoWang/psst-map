@@ -138,7 +138,7 @@ struct PlaceThumbnail: View {
         .task(id: place.id) {
             picture = nil
             guard place.spot.currentPhotos.isEmpty else { return }
-            let size = FeedCard.pictureSize(for: UIScreen.main.bounds.size)
+            let size = FeedCard.pictureSize(for: AppWindow.size)
             await SpotVisuals.shared.picture(for: place, size: size, scale: 2, dark: true) { update in
                 withAnimation(.easeOut(duration: 0.25)) { picture = update }
             }

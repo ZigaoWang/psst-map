@@ -119,7 +119,7 @@ struct PhotoViewer: View {
             .opacity(zoom > 1 ? 0 : 1)
         }
         .task {
-            let screen = max(UIScreen.main.bounds.width, UIScreen.main.bounds.height) * displayScale
+            let screen = max(AppWindow.size.width, AppWindow.size.height) * displayScale
             image = await PhotoLoader.shared.image(photo, size: .full, maxPixels: screen)
         }
     }

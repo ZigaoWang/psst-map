@@ -217,3 +217,18 @@ extension Text {
         return Text(attributed).typesettingLanguage(language)
     }
 }
+
+/// The app's own window, for the few places that need its size or appearance outside a view. Unlike
+/// UIScreen.main (deprecated), it's right in iPad split view and Stage Manager.
+@MainActor
+enum AppWindow {
+    private static var window: UIWindow? {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .sorted { ($0.activationState == .foregroundActive ? 0 : 1) < ($1.activationState == .foregroundActive ? 0 : 1) }
+            .first?.windows.first { $0.isKeyWindow } ?? nil
+    }
+
+    static var size: CGSize { window?.bounds.size ?? CGSize(width: 393, height: 852) }
+    static var isDark: Bool { window?.traitCollection.userInterfaceStyle == .dark }
+}
