@@ -31,7 +31,13 @@ final class SpotVisuals {
         availability = LookAroundAvailability()
         memory.countLimit = 24
         let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
-        diskFolder = caches?.appendingPathComponent("visuals-v4", isDirectory: true)
+        // v5: pictures made with Apple's China provider are kept apart from the rest (see cacheKey).
+        diskFolder = caches?.appendingPathComponent("visuals-v5", isDirectory: true)
+        if let caches {
+            for old in ["visuals", "visuals-v2", "visuals-v3", "visuals-v4"] {
+                try? FileManager.default.removeItem(at: caches.appendingPathComponent(old, isDirectory: true))
+            }
+        }
         if let diskFolder {
             try? FileManager.default.createDirectory(at: diskFolder, withIntermediateDirectories: true)
         }
@@ -39,9 +45,11 @@ final class SpotVisuals {
 
     // MARK: Look Around
 
-    /// The Look Around scene for a place, or nil if there is none (always nil in mainland China).
+    /// The Look Around scene for a place, or nil if there is none. Always nil for places in mainland China,
+    /// and anywhere while Apple Maps uses its China provider (on devices in mainland China), which has no Look
+    /// Around at all. That answer says nothing about the place, so it's never remembered.
     func lookAroundScene(for place: Place) async -> MKLookAroundScene? {
-        if place.isInMainlandChina { return nil }
+        if place.isInMainlandChina || MapDatum.shared.chinaUsesGCJ02 { return nil }
         if let scene = scenes[place.id] { return scene }
         if availability.knownUnavailable(place.id) { return nil }
         if let task = sceneTasks[place.id] { return await task.value }
@@ -226,7 +234,9 @@ final class SpotVisuals {
 
     private func cacheKey(place: Place, size: CGSize, scale: CGFloat, dark: Bool) -> String {
         let safeID = place.id.replacingOccurrences(of: "/", with: "__")
-        let datum = place.isInMainlandChina && MapDatum.shared.chinaUsesGCJ02 ? "-gcj" : ""
+        // The China provider draws everything differently (shifted in China, little imagery elsewhere), so
+        // its pictures are never reused when the device uses Apple's global maps, or the other way round.
+        let datum = MapDatum.shared.chinaUsesGCJ02 ? "-cn" : ""
         return "\(safeID)\(datum)-\(Int(size.width))x\(Int(size.height))@\(Int(scale))-\(dark ? "d" : "l")"
     }
 
@@ -272,7 +282,8 @@ private final class CachedPicture {
 /// Remembers which places have no Look Around coverage so the app does not keep asking.
 /// Entries expire after 30 days because Apple keeps adding coverage.
 private final class LookAroundAvailability {
-    private static let key = "visuals.lookAroundUnavailable"
+    // v2: earlier answers included ones recorded while the China provider was in use, which has no Look Around.
+    private static let key = "visuals.lookAroundUnavailable.v2"
     private var unavailable: [String: Date]
 
     init() {
@@ -301,8 +312,11 @@ enum MapFraming {
     /// from straight above instead.
     private static let countriesWith3D: Set<String> = ["GB", "US", "CA", "FR", "DE", "ES", "IT", "NL", "IE", "JP", "AU"]
 
+    /// Apple's China provider, used on devices in mainland China, has no 3D buildings abroad either, so
+    /// everything is shown from above while it's in use.
     static func shows3D(_ place: Place) -> Bool {
         countriesWith3D.contains(place.spot.countryCode ?? "") && (place.spot.size ?? .medium) != .small
+            && !MapDatum.shared.chinaUsesGCJ02
     }
 
     static func distance(for place: Place) -> CLLocationDistance {
