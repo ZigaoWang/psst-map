@@ -201,6 +201,9 @@ struct FeedPicture: View {
     @State private var picture: SpotVisuals.Picture?
     @State private var didFail = false
     @State private var zoomed = false
+    /// Changes every time the card becomes active or inactive, which replaces the zooming view: a long zoom
+    /// still running from the last visit can't carry over and shrink the picture inside its frame.
+    @State private var zoomRun = 0
     @Environment(\.displayScale) private var displayScale
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -210,13 +213,14 @@ struct FeedPicture: View {
                 PlacePhotoImage(photo: photo, size: .full, placeholder: place.spot.kind.color.opacity(0.35))
                     .frame(width: size.width, height: size.height)
                     .scaleEffect(zoomed ? 1.09 : 1.0, anchor: .center)
+                    .id(zoomRun)
             } else if let picture {
                 Image(uiImage: picture.image)
                     .resizable()
                     .scaledToFill()
                     .frame(width: size.width, height: size.height)
                     .scaleEffect(zoomed ? 1.09 : 1.0, anchor: .center)
-                    .id(picture.image)
+                    .id("\(ObjectIdentifier(picture.image))-\(zoomRun)")
                     .transition(.opacity)
             } else {
                 VisualPlaceholder(kind: place.spot.kind, isLoading: !didFail,
@@ -235,11 +239,12 @@ struct FeedPicture: View {
             didFail = result == nil
         }
         .onChange(of: isActive, initial: true) { _, active in
-            guard !reduceMotion else { return }
-            if active {
+            zoomRun += 1
+            zoomed = false
+            guard active, !reduceMotion else { return }
+            // Starts after the fresh view has appeared at full size.
+            Task { @MainActor in
                 withAnimation(.linear(duration: 14)) { zoomed = true }
-            } else {
-                zoomed = false
             }
         }
     }
