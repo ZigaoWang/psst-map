@@ -144,3 +144,30 @@ final class ContentDecodingTests: XCTestCase {
         XCTAssertTrue(common.legacyIds.isEmpty)
     }
 }
+
+/// Names and links from the server are only used when they're safe.
+final class ContentSafetyTests: XCTestCase {
+    private func manifest(version: String, file: String) throws -> ContentManifest {
+        let json = """
+            {"formatVersion": 2, "contentVersion": "\(version)", "generatedAt": "x",
+             "common": {"file": "\(file)", "sha256": "0", "bytes": 1}, "cities": []}
+            """
+        return try JSONDecoder().decode(ContentManifest.self, from: Data(json.utf8))
+    }
+
+    func testOnlyPlainPackNamesAndTimestampVersionsAreUsed() throws {
+        XCTAssertTrue(try manifest(version: "20261008T095109Z", file: "packs/common.abc123.json.gz").isSafe)
+        XCTAssertFalse(try manifest(version: "../../Documents", file: "packs/common.json.gz").isSafe)
+        XCTAssertFalse(try manifest(version: "20261008T095109Z", file: "packs/../../evil").isSafe)
+        XCTAssertFalse(try manifest(version: "20261008T095109Z", file: "/etc/passwd").isSafe)
+    }
+
+    func testOnlyWebLinksFromContentCanBeOpened() throws {
+        let source = { (url: String) in
+            try? JSONDecoder().decode(Fact.Source.self, from: Data(#"{"title": "t", "publisher": "p", "url": "\#(url)"}"#.utf8))
+        }
+        XCTAssertNotNil(source("https://example.org/page"))
+        XCTAssertNil(source("tel:123"))
+        XCTAssertNil(source("javascript:alert(1)"))
+    }
+}

@@ -41,3 +41,12 @@ final class ChinaCoordinatesTests: XCTestCase {
         XCTAssertEqual(shifted.longitude, expected.longitude, accuracy: 1e-12)
     }
 }
+
+final class ChinaInverseTests: XCTestCase {
+    func testReadingAPointOffAChinaMapGivesBackTheTruePosition() {
+        let bund = CLLocationCoordinate2D(latitude: 31.2405, longitude: 121.4903)
+        let back = ChinaCoordinates.wgs84(fromGCJ02: ChinaCoordinates.gcj02(fromWGS84: bund))
+        XCTAssertEqual(back.latitude, bund.latitude, accuracy: 1e-6)
+        XCTAssertEqual(back.longitude, bund.longitude, accuracy: 1e-6)
+    }
+}

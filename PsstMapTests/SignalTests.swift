@@ -43,9 +43,15 @@ final class DemandSignalTests: XCTestCase {
     private let paris = CLLocationCoordinate2D(latitude: 48.8566, longitude: 2.3522)
     private let citySpan = MKCoordinateSpan(latitudeDelta: 0.2, longitudeDelta: 0.3)
 
+    private let london = CLLocationCoordinate2D(latitude: 51.5, longitude: -0.12)
+
     func testAnEmptyCityViewSendsItsCoarseCell() {
-        let cell = DemandSignal.cell(center: paris, span: citySpan, hasPlaces: false, userLocation: nil)
+        let cell = DemandSignal.cell(center: paris, span: citySpan, hasPlaces: false, userLocation: london)
         XCTAssertEqual(cell, "851fb467fffffff", "must match the server's h3 for the same point")
+    }
+
+    func testNothingIsSentWithoutKnowingWhereTheUserIs() {
+        XCTAssertNil(DemandSignal.cell(center: paris, span: citySpan, hasPlaces: false, userLocation: nil))
     }
 
     func testNothingIsSentWhileTheUserIsInView() {
