@@ -44,6 +44,12 @@ final class MapDatum {
         return ChinaCoordinates.gcj02(fromWGS84: wgs84)
     }
 
+    /// A point read off the map (the middle of the view) in WGS-84, the system content and H3 use.
+    func wgs84(fromMap point: CLLocationCoordinate2D) -> CLLocationCoordinate2D {
+        guard chinaUsesGCJ02, ChinaCoordinates.isInMainlandChina(point) else { return point }
+        return ChinaCoordinates.wgs84(fromGCJ02: point)
+    }
+
     /// Runs one small MapKit search and updates the answer. Safe to call often.
     func calibrate() async {
         guard !isCalibrating else { return }

@@ -7,6 +7,12 @@ import Observation
 final class LocationService: NSObject, CLLocationManagerDelegate {
     private(set) var authorization: CLAuthorizationStatus
     private(set) var location: CLLocation?
+
+    /// The last fix if it's from the last 30 minutes; older than that, the person may be somewhere else.
+    var recentLocation: CLLocation? {
+        guard let location, location.timestamp.timeIntervalSinceNow > -30 * 60 else { return nil }
+        return location
+    }
     private let manager = CLLocationManager()
     private var waiters: [CheckedContinuation<CLLocation?, Never>] = []
 

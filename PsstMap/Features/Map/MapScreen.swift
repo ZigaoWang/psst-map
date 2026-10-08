@@ -213,7 +213,9 @@ struct MapScreen: View {
         .sensoryFeedback(.selection, trigger: app.shownCategories)
     }
 
-    private func updateVisibleArea(_ region: MKCoordinateRegion) {
+    private func updateVisibleArea(_ shown: MKCoordinateRegion) {
+        // The map may be drawn in GCJ-02 in mainland China; places and H3 cells are WGS-84.
+        let region = MKCoordinateRegion(center: MapDatum.shared.wgs84(fromMap: shown.center), span: shown.span)
         let center = CLLocation(latitude: region.center.latitude, longitude: region.center.longitude)
         let span = region.span
         let visible = app.visiblePlaces.filter { place in
@@ -235,7 +237,7 @@ struct MapScreen: View {
                     && abs(place.coordinate.longitude - region.center.longitude) <= span.longitudeDelta / 2
             }
             if let cell = DemandSignal.cell(center: region.center, span: span, hasPlaces: hasPlaces,
-                                            userLocation: app.location.location?.coordinate) {
+                                            userLocation: app.location.recentLocation?.coordinate) {
                 DemandSignal.send(cell: cell)
             }
         }

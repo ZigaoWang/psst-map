@@ -59,6 +59,7 @@ final class ReportOutbox {
     }
 
     private(set) var pending: [Report]
+    @ObservationIgnored private var isFlushing = false
     private static let key = "reports.pending"
     /// One report per story per device (remembered for 90 days), and at most 5 reports a day.
     nonisolated static let limit = SendLimit(storeKey: "reports.sent", perDay: 5, window: 90)
@@ -85,8 +86,13 @@ final class ReportOutbox {
         return pending.contains(report) ? .queued : .sent
     }
 
+    /// Sends waiting reports one at a time. Only one flush runs at once (submitting and coming back to the app
+    /// both start one), so a report is never posted twice; one added meanwhile goes out in the same pass.
     func flush() async {
-        for report in pending {
+        guard !isFlushing else { return }
+        isFlushing = true
+        defer { isFlushing = false }
+        while let report = pending.first {
             do {
                 try await PsstAPI.post("reports", body: ["factId": report.factID, "reason": report.reason.rawValue,
                                                          "message": report.message, "appVersion": report.appVersion])
@@ -105,8 +111,8 @@ final class ReportOutbox {
 
 /// "No stories here yet" signals, so research can go where people look. Sends one thing: the id of the
 /// H3 cell (resolution 5, about 250 km²) at the middle of an empty, city-sized map view. Never the
-/// person's location: nothing is sent while their own position is inside the view. Off when they turn
-/// off "Help choose new areas".
+/// person's location: nothing is sent unless their position is known and outside the view, so with
+/// location off, or no recent fix, nothing is sent at all. Off when they turn off "Help choose new areas".
 enum DemandSignal {
     static let settingKey = "privacy.helpChooseAreas"
     nonisolated static let resolution = 5
@@ -121,8 +127,9 @@ enum DemandSignal {
     nonisolated static func cell(center: CLLocationCoordinate2D, span: MKCoordinateSpan, hasPlaces: Bool,
                                  userLocation: CLLocationCoordinate2D?) -> String? {
         guard !hasPlaces, (0.03...0.8).contains(span.latitudeDelta) else { return nil }
-        if let user = userLocation,
-           abs(user.latitude - center.latitude) <= span.latitudeDelta / 2,
+        // Without knowing where the person is, the view could be around them.
+        guard let user = userLocation else { return nil }
+        if abs(user.latitude - center.latitude) <= span.latitudeDelta / 2,
            abs(user.longitude - center.longitude) <= span.longitudeDelta / 2 {
             return nil
         }

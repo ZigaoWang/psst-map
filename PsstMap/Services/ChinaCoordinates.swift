@@ -44,6 +44,18 @@ nonisolated enum ChinaCoordinates {
         return included.contains(where: inside) && !excluded.contains(where: inside)
     }
 
+    /// The inverse, for a point read off a map drawn in GCJ-02 (the middle of the view). There's no closed
+    /// form; a few rounds of correction get within a few centimeters.
+    static func wgs84(fromGCJ02 gcj: CLLocationCoordinate2D) -> CLLocationCoordinate2D {
+        var wgs = gcj
+        for _ in 0..<4 {
+            let shifted = gcj02(fromWGS84: wgs)
+            wgs = CLLocationCoordinate2D(latitude: wgs.latitude - (shifted.latitude - gcj.latitude),
+                                         longitude: wgs.longitude - (shifted.longitude - gcj.longitude))
+        }
+        return wgs
+    }
+
     static func gcj02(fromWGS84 wgs: CLLocationCoordinate2D) -> CLLocationCoordinate2D {
         let x = wgs.longitude - 105.0
         let y = wgs.latitude - 35.0
