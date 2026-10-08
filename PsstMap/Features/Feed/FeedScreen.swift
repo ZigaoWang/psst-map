@@ -62,9 +62,9 @@ struct FeedScreen: View {
         .modifier(DarkTabBarBackground())
         .placePresentation($detailPlace, namespace: zoom)
         .onAppear { if items.isEmpty { rebuild() } }
-        .onChange(of: app.catalog.places.count) { rebuild() }
+        // New content or different filters keep the reader where they are; a new scope starts over.
+        .onChange(of: contentKey) { rebuild(keepingPosition: true) }
         .onChange(of: scope) { rebuild() }
-        .onChange(of: app.visiblePlaces.count) { rebuild() }
         .onChange(of: currentID) { _, id in handlePageChange(to: id) }
         .sensoryFeedback(.selection, trigger: currentID)
     }
@@ -150,7 +150,14 @@ struct FeedScreen: View {
         return places.filter(app.isVisible)
     }
 
-    private func rebuild() {
+    /// Changes whenever the places the feed could show change: a content update or a filter change.
+    private var contentKey: String {
+        [app.catalog.contentVersion ?? "",
+         app.shownKinds.map(\.rawValue).sorted().joined(separator: ","),
+         app.shownCategories.map(\.rawValue).sorted().joined(separator: ",")].joined(separator: "|")
+    }
+
+    private func rebuild(keepingPosition: Bool = false) {
         let places = scopedPlaces()
         guard !places.isEmpty else {
             items = []
@@ -161,6 +168,8 @@ struct FeedScreen: View {
             Task {
                 let location = await app.location.currentLocation()
                 isLocating = false
+                // The reader may have picked somewhere else while their location was being found.
+                guard scope == .nearMe else { return }
                 guard let location else {
                     locationMessage = app.location.isDenied
                         ? String(localized: "Location is off for Psst. Turn it on in Settings to see what's around you.")
@@ -169,19 +178,21 @@ struct FeedScreen: View {
                     return
                 }
                 let nearby = FeedOrder.byDistance(places, from: location)
-                show(nearby)
+                show(nearby, keepingPosition: keepingPosition)
                 if nearby.first.map({ $0.location.distance(from: location) > 25_000 }) ?? true {
                     locationMessage = String(localized: "Nothing near you yet, so these are the closest places Psst knows.")
                 }
             }
         } else {
-            show(FeedOrder.order(places, seen: app.seen.ids, seed: app.feedSeed))
+            show(FeedOrder.order(places, seen: app.seen.ids, seed: app.feedSeed), keepingPosition: keepingPosition)
         }
     }
 
-    private func show(_ places: [Place]) {
+    private func show(_ places: [Place], keepingPosition: Bool = false) {
         items = places
-        currentID = places.first?.id
+        if !(keepingPosition && places.contains { $0.id == currentID }) {
+            currentID = places.first?.id
+        }
         prefetch(after: currentID)
     }
 
