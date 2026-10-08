@@ -904,6 +904,16 @@
         }
       }
     },
+    "If it keeps happening, reinstalling Psst fixes it.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "如果一直出现这个问题，重新安装 Psst 即可解决。"
+          }
+        }
+      }
+    },
     "In Apple Maps": {
       "localizations": {
         "zh-Hans": {
@@ -1626,12 +1636,32 @@
         }
       }
     },
+    "Psst couldn't load": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Psst 无法加载"
+          }
+        }
+      }
+    },
     "Psst doesn't cover where you are right now. Pick an area to explore instead.": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
             "value": "Psst 暂时还没覆盖你所在的地方。选一个区域去探索吧。"
+          }
+        }
+      }
+    },
+    "Psst needs to download its places once. Connect to the internet and try again.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Psst 需要先下载一次地点。请连接网络后重试。"
           }
         }
       }
@@ -1976,16 +2006,6 @@
         }
       }
     },
-    "Something went quiet": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "出了点问题"
-          }
-        }
-      }
-    },
     "Sources: %@": {
       "localizations": {
         "zh-Hans": {
@@ -2246,6 +2266,16 @@
         }
       }
     },
+    "The places on this phone couldn't be read.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法读取这台手机上的地点。"
+          }
+        }
+      }
+    },
     "The stories behind the places people walk past. Every place here has at least one thing about it worth leaning over to tell a friend.": {
       "localizations": {
         "zh-Hans": {
@@ -2362,16 +2392,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "重试"
-          }
-        }
-      }
-    },
-    "Try again. If it keeps happening, reinstalling Psst will fix it.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "请重试。如果一直出现，重新安装 Psst 即可解决。"
           }
         }
       }
