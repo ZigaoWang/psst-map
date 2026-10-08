@@ -8,7 +8,9 @@ import Foundation
 // - a fact with an unknown veracity is dropped, because it can't be labeled honestly;
 // - a place, fact, source, area, or tag that fails to decode is skipped instead of failing its pack;
 // - a guide that fails to decode is dropped, and its place still shows its stories;
-// - unknown fields are ignored.
+// - unknown fields are ignored;
+// - links that aren't web addresses are dropped, and file names or versions that could reach outside the
+//   content folder make the manifest invalid.
 
 /// The file the app downloads first. Packs are named by their hash and never change.
 nonisolated struct ContentManifest: Codable, Sendable {
@@ -40,6 +42,18 @@ nonisolated struct ContentManifest: Codable, Sendable {
     }
 
     var packs: [PackReference] { [common] + cities.map(\.pack) }
+
+    /// Versions are fixed-width UTC timestamps (20261008T095109Z), so comparing them as text orders them by time,
+    /// and they're safe to use as folder names. Pack files are plain names inside packs/.
+    var isSafe: Bool {
+        contentVersion.wholeMatch(of: /\d{8}T\d{6}Z/) != nil
+            && packs.allSatisfy { $0.file.wholeMatch(of: /packs\/[A-Za-z0-9._-]+/) != nil && !$0.file.contains("..") }
+    }
+}
+
+extension URL {
+    /// Only http and https links from content are ever opened.
+    nonisolated var isWebLink: Bool { scheme == "https" || scheme == "http" }
 }
 
 /// Cities, the districts and neighborhoods places refer to, published tags, and old place ids.
@@ -397,10 +411,13 @@ nonisolated struct Photo: Decodable, Hashable, Identifiable, Sendable {
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             author = try container.decode(String.self, forKey: .author)
-            authorUrl = try? container.decodeIfPresent(URL.self, forKey: .authorUrl)
+            authorUrl = (try? container.decodeIfPresent(URL.self, forKey: .authorUrl)).flatMap { $0?.isWebLink == true ? $0 : nil }
             license = try container.decode(String.self, forKey: .license)
-            licenseUrl = try? container.decodeIfPresent(URL.self, forKey: .licenseUrl)
+            licenseUrl = (try? container.decodeIfPresent(URL.self, forKey: .licenseUrl)).flatMap { $0?.isWebLink == true ? $0 : nil }
             sourceUrl = try container.decode(URL.self, forKey: .sourceUrl)
+            guard sourceUrl.isWebLink else {
+                throw DecodingError.dataCorruptedError(forKey: .sourceUrl, in: container, debugDescription: "not a web link")
+            }
             source = try? container.decodeIfPresent(String.self, forKey: .source)
             title = try? container.decodeIfPresent(String.self, forKey: .title)
         }
@@ -460,6 +477,24 @@ nonisolated struct Fact: Decodable, Hashable, Identifiable, Sendable {
         let title: String
         let publisher: String
         let url: URL
+
+        init(title: String, publisher: String, url: URL) {
+            self.title = title
+            self.publisher = publisher
+            self.url = url
+        }
+
+        enum CodingKeys: String, CodingKey { case title, publisher, url }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            title = try container.decode(String.self, forKey: .title)
+            publisher = try container.decode(String.self, forKey: .publisher)
+            url = try container.decode(URL.self, forKey: .url)
+            guard url.isWebLink else {
+                throw DecodingError.dataCorruptedError(forKey: .url, in: container, debugDescription: "not a web link")
+            }
+        }
     }
 
     init(id: String, category: Category, status: Status, headline: String, short: String, long: String,

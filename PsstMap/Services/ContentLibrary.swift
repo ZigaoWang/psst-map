@@ -82,6 +82,7 @@ nonisolated enum ContentLibrary {
         guard manifest.formatVersion == formatVersion else {
             throw LoadError.corrupt("format \(manifest.formatVersion)")
         }
+        guard manifest.isSafe else { throw LoadError.corrupt("unsafe file names") }
         return manifest
     }
 

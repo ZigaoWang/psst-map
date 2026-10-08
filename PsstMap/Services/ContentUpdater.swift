@@ -37,6 +37,8 @@ actor ContentUpdater {
         let (data, response) = try await session.data(for: request)
         guard (response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
         let manifest = try JSONDecoder().decode(ContentManifest.self, from: data)
+        // A manifest whose names could reach outside the content folder is never acted on.
+        guard manifest.isSafe else { throw ContentLibrary.LoadError.corrupt("unsafe file names") }
         guard manifest.formatVersion == ContentLibrary.formatVersion,
               manifest.contentVersion > (current?.manifest.contentVersion ?? "") else { return nil }
 
@@ -63,15 +65,16 @@ actor ContentUpdater {
         }
         try data.write(to: incoming.appendingPathComponent("manifest.json"), options: .atomic)
 
-        // Decode everything before switching over.
-        _ = try ContentLibrary.load(directory: incoming, source: .downloaded)
+        // Decode everything before switching over; the decoded content is what's returned, so it's read once.
+        let decoded = try ContentLibrary.load(directory: incoming, source: .downloaded)
         let final = ContentLibrary.cacheRoot.appendingPathComponent(manifest.contentVersion, isDirectory: true)
         try? fileManager.removeItem(at: final)
         try fileManager.moveItem(at: incoming, to: final)
         try ContentLibrary.makeCurrent(version: manifest.contentVersion)
         removeOldVersions(keeping: [manifest.contentVersion, current?.manifest.contentVersion].compactMap { $0 })
         logger.info("Installed content \(manifest.contentVersion, privacy: .public), \(downloaded) packs downloaded")
-        return try ContentLibrary.load(directory: final, source: .downloaded)
+        return ContentLibrary.Loaded(catalog: decoded.catalog, manifest: decoded.manifest, directory: final,
+                                     source: .downloaded)
     }
 
     private func removeOldVersions(keeping versions: [String]) {
